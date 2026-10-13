@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.env
+coverage
+.vscode
+.idea
+playwright-report
+test-results
+e2e/.last-live-run.json
+blob-report
+playwright/.cache

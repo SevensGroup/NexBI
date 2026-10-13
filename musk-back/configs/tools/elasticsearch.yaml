@@ -1,0 +1,20 @@
+# Read-only Elasticsearch MCP tools. Write operations are forbidden.
+# mcp_url is overlaid by ELASTICSEARCH_MCP_URL. Leave empty to disable registration.
+mcp_url: ""
+timeout: 10s
+retry:
+  max_attempts: 3
+  backoff: 200ms
+max_size: 100
+max_aggregation_buckets: 100
+read_only: true
+allowed_tools:
+  - search
+  - get
+  - count
+  - aggregate
+denied_tools:
+  - delete
+  - update
+  - index
+  - bulk

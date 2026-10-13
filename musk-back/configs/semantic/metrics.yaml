@@ -1,0 +1,71 @@
+# Advertising metrics. Derived metrics use formula; leaf metrics map to an ES field.
+roas:
+  name: ROAS
+  description: Return on Advertising Spend
+  formula: revenue / spend
+  aliases: [ROI, roi, return on investment]
+
+ctr:
+  name: CTR
+  description: Click-through rate
+  formula: clicks / impressions
+  aliases: [ctr, click-through rate]
+
+cpc:
+  name: CPC
+  description: Cost per click
+  formula: spend / clicks
+  aliases: [cpc, cost per click]
+
+cpm:
+  name: CPM
+  description: Cost per thousand impressions
+  formula: spend / impressions * 1000
+  aliases: [cpm, cost per mille]
+
+cvr:
+  name: CVR
+  description: Conversion rate
+  formula: conversions / clicks
+  aliases: [cvr, conversion rate]
+
+cpa:
+  name: CPA
+  description: Cost per acquisition
+  formula: spend / conversions
+  aliases: [cpa, acquisition cost, conversion cost]
+
+spend:
+  name: Spend
+  description: Advertising spend
+  field: spend
+  aggregation: sum
+  aliases: [cost]
+
+revenue:
+  name: Revenue
+  description: Attributed advertising revenue
+  field: revenue
+  aggregation: sum
+  aliases: [income]
+
+conversions:
+  name: Conversions
+  description: Attributed conversions
+  field: conversions
+  aggregation: sum
+  aliases: [conv, conversion]
+
+clicks:
+  name: Clicks
+  description: Ad clicks
+  field: clicks
+  aggregation: sum
+  aliases: [click]
+
+impressions:
+  name: Impressions
+  description: Ad impressions
+  field: impressions
+  aggregation: sum
+  aliases: [impr, impression, views]

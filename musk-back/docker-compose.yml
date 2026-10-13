@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: agent
+      POSTGRES_DB: agent
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent -d agent"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  mock-mcp-server:
+    build:
+      context: .
+      target: mockmcp
+    ports:
+      - "8081:8081"
+    environment:
+      MOCK_MCP_ADDR: ":8081"
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  autonomous-agent:
+    build:
+      context: .
+      target: agent
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-mcp-server:
+        condition: service_started
+    environment:
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL}
+      LLM_FALLBACK_BASE_URL: ${LLM_FALLBACK_BASE_URL:-}
+      LLM_FALLBACK_API_KEY: ${LLM_FALLBACK_API_KEY:-}
+      LLM_FALLBACK_MODEL: ${LLM_FALLBACK_MODEL:-}
+      AGENT_MAX_STEPS: ${AGENT_MAX_STEPS:-30}
+      AGENT_MAX_TASKS: ${AGENT_MAX_TASKS:-12}
+      AGENT_MAX_TOOL_CALLS: ${AGENT_MAX_TOOL_CALLS:-50}
+      AGENT_MAX_RUNTIME: ${AGENT_MAX_RUNTIME:-10m}
+      AGENT_MAX_LLM_COST: ${AGENT_MAX_LLM_COST:-1.0}
+      TOOL_TIMEOUT: ${TOOL_TIMEOUT:-10s}
+      ELASTICSEARCH_MCP_URL: ${ELASTICSEARCH_MCP_URL:-http://mock-mcp-server:8081/mcp}
+      SEMANTIC_DIR: ${SEMANTIC_DIR:-configs/semantic}
+      SEMANTIC_MAX_TIME_RANGE: ${SEMANTIC_MAX_TIME_RANGE:-90d}
+      SEMANTIC_MAX_RESULT_SIZE: ${SEMANTIC_MAX_RESULT_SIZE:-100}
+      MEMORY_POSTGRES_URL: ${MEMORY_POSTGRES_URL:-postgres://agent:agent@postgres:5432/agent?sslmode=disable}
+      MEMORY_SHORT_TERM_TTL: ${MEMORY_SHORT_TERM_TTL:-24h}
+      MEMORY_TASK_TTL: ${MEMORY_TASK_TTL:-7d}
+      MEMORY_LONG_TERM_TTL: ${MEMORY_LONG_TERM_TTL:-}
+      MEMORY_SEARCH_LIMIT: ${MEMORY_SEARCH_LIMIT:-20}
+      GUARDRAIL_MEDIUM_AUTO: ${GUARDRAIL_MEDIUM_AUTO:-true}
+      GUARDRAIL_APPROVAL_TTL: ${GUARDRAIL_APPROVAL_TTL:-15m}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-autonomous-agent}
+      RATE_LIMIT_RPS: ${RATE_LIMIT_RPS:-20}
+      CONCURRENCY_MAX: ${CONCURRENCY_MAX:-8}
+      CONFIG_ENV: ${CONFIG_ENV:-dev}
+    volumes:
+      - ./configs:/app/configs:ro
+    command: ["-config", "configs/dev/agent.yaml"]
+
+volumes:
+  postgres_data:

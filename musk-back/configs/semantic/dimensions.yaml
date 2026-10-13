@@ -1,0 +1,59 @@
+channel:
+  name: Channel
+  description: Advertising channel / platform
+  field: channel
+  type: keyword
+  aliases: [platform, media]
+  values:
+    Meta: [meta, facebook, fb]
+    Google: [google, google ads, googleads]
+    TikTok: [tiktok, tt]
+
+campaign:
+  name: Campaign
+  description: Advertising campaign
+  field: campaign_id
+  type: keyword
+  entity: Campaign
+  aliases: [campaign_id, campaign series, flight]
+
+adgroup:
+  name: AdGroup
+  description: Ad group
+  field: ad_group_id
+  type: keyword
+  entity: AdGroup
+  aliases: [ad_group, adset, ad group]
+
+creative:
+  name: Creative
+  description: Ad creative
+  field: creative_id
+  type: keyword
+  entity: Creative
+  aliases: [ad, creative, asset]
+
+country:
+  name: Country
+  description: Country or region
+  field: country
+  type: keyword
+  aliases: [region, geo]
+
+device:
+  name: Device
+  description: Device type
+  field: device
+  type: keyword
+  aliases: [os]
+  values:
+    Mobile: [mobile, phone]
+    Desktop: [desktop, pc, computer]
+    Tablet: [tablet]
+
+date:
+  name: Date
+  description: Event date
+  field: date
+  type: date
+  aliases: [day]

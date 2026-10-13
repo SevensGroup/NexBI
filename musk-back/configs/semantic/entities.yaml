@@ -1,0 +1,17 @@
+campaign:
+  name: Campaign
+  description: Advertising campaign
+  key: campaign_id
+  dimensions: [Campaign, Channel]
+
+adgroup:
+  name: AdGroup
+  description: Ad group within a campaign
+  key: ad_group_id
+  dimensions: [AdGroup, Campaign]
+
+creative:
+  name: Creative
+  description: Ad creative
+  key: creative_id
+  dimensions: [Creative, AdGroup, Campaign]

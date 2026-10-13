@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import '@vue-flow/core/dist/style.css';
+@import '@vue-flow/core/dist/theme-default.css';
+@import '@vue-flow/controls/dist/style.css';
+@import '@vue-flow/minimap/dist/style.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  background: #0b0d11;
+  color: #e8eaee;
+  font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.el-overlay,
+.el-drawer,
+.el-dialog {
+  font-family: inherit;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.status-understanding { color: #7aa2f7; }
+.status-planning { color: #7dcfff; }
+.status-deciding { color: #bb9af7; }
+.status-executing { color: #e0af68; }
+.status-observing { color: #2ac3de; }
+.status-reflecting { color: #9d7cd8; }
+.status-waiting { color: #ff9e64; }
+.status-completed { color: #9ece6a; }
+.status-failed { color: #f7768e; }
+
+.status-understanding .status-dot,
+.badge-UNDERSTANDING { background: #7aa2f7; }
+.status-planning .status-dot,
+.badge-PLANNING { background: #7dcfff; }
+.status-deciding .status-dot,
+.badge-DECIDING { background: #bb9af7; }
+.status-executing .status-dot,
+.badge-EXECUTING { background: #e0af68; }
+.status-observing .status-dot,
+.badge-OBSERVING { background: #2ac3de; }
+.status-reflecting .status-dot,
+.badge-REFLECTING { background: #9d7cd8; }
+.status-waiting .status-dot,
+.badge-WAITING_APPROVAL { background: #ff9e64; }
+.status-completed .status-dot,
+.badge-COMPLETED { background: #9ece6a; }
+.status-failed .status-dot,
+.badge-FAILED { background: #f7768e; }
+
+.risk-low { color: #9ece6a; }
+.risk-medium { color: #e0af68; }
+.risk-high { color: #ff9e64; }
+.risk-critical { color: #f7768e; }
+
+.task-pending { color: #8b929e; }
+.task-ready { color: #7dcfff; }
+.task-running { color: #e0af68; }
+.task-completed { color: #9ece6a; }
+.task-failed { color: #f7768e; }
+
+.pulse-soft {
+  animation: pulse-soft 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.vue-flow {
+  background: #12151b;
+}
+
+.el-drawer {
+  background: #12151b !important;
+  color: #e8eaee;
+}
+
+.el-tabs__item {
+  color: #8b929e;
+}
+
+.el-tabs__item.is-active {
+  color: #e8eaee;
+}

@@ -1,0 +1,6 @@
+ads:
+  name: advertising
+  description: Advertising performance events
+  index: ads-*
+  date_field: date
+  default: true

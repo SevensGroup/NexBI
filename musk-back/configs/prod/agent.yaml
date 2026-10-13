@@ -1,0 +1,95 @@
+server:
+  addr: ":8080"
+  shutdown_timeout: 15s
+  read_timeout: 15s
+  write_timeout: 120s
+
+llm:
+  # Leave empty in this file. Set via environment variables:
+  # LLM_BASE_URL, LLM_API_KEY, LLM_MODEL
+  base_url: ""
+  api_key: ""
+  model: ""
+  timeout: 60s
+  fallback:
+    # LLM_FALLBACK_BASE_URL / LLM_FALLBACK_API_KEY / LLM_FALLBACK_MODEL
+    # Primary → Secondary → Fail.
+    base_url: ""
+    api_key: ""
+    model: ""
+    timeout: 60s
+
+agent:
+  name: autonomous-agent
+  description: A minimal Eino autonomous agent
+  instruction: "You are the Coordinator of a multi-agent team (Analyst, Researcher, Reviewer). Decompose the user goal, DELEGATE_AGENT with {\"agent\":\"analyst|researcher|reviewer\",\"task\":\"...\"}. For advertising analysis (e.g. Why did Meta ad ROI decline yesterday), delegate to analyst so it can run analyze_advertising / semantic_query until EvidenceSufficient, then send the structured report to the Reviewer. The Analyst report is JSON: {\"summary\":\"\",\"metrics\":{},\"anomalies\":[],\"root_causes\":[],\"evidence\":[],\"recommendations\":[],\"confidence\":0.0}. Reject conclusions without evidence. If the Reviewer returns {\"approved\":false,\"reason\":\"insufficient evidence\"}, do not finish; wait for REPLAN and re-execute. Answer the user with that structured report. Never generate Elasticsearch Query DSL. Use search_memory to recall user preferences, business knowledge, historical insights, and query patterns. Use save_memory to persist them. Never store API keys or credentials. After each tool result, reflection will judge whether the goal is met and whether to CONTINUE, REPLAN, FINISH, or ASK_USER."
+  # AGENT_MAX_STEPS overrides this value.
+  max_steps: 30
+  # AGENT_MAX_TASKS overrides this value. Caps planner DAG size.
+  max_tasks: 12
+  budget:
+    # AGENT_MAX_TOOL_CALLS / MAX_TOOL_CALLS overlays this value.
+    max_tool_calls: 50
+    # AGENT_MAX_RUNTIME / MAX_RUNTIME overlays this value.
+    max_runtime: 10m
+    # AGENT_MAX_LLM_COST / MAX_LLM_COST overlays this value (USD).
+    max_llm_cost: 1.0
+    input_usd_per_1k: 0.00015
+    output_usd_per_1k: 0.0006
+
+tools:
+  # TOOL_TIMEOUT overrides this value. Caps a single tool execution.
+  timeout: 10s
+  elasticsearch:
+    # ELASTICSEARCH_MCP_URL overlays mcp_url from this file.
+    config: configs/tools/elasticsearch.yaml
+
+semantic:
+  # SEMANTIC_DIR overlays this path. Catalog YAML lives under configs/semantic/.
+  dir: configs/semantic
+  # SEMANTIC_MAX_TIME_RANGE overlays this value. Accepts Go durations or days (90d).
+  max_time_range: 90d
+  # SEMANTIC_MAX_RESULT_SIZE overlays this value.
+  max_result_size: 100
+
+memory:
+  # MEMORY_POSTGRES_URL overlays this value. Empty uses in-process memory (tests / local).
+  postgres_url: ""
+  # MEMORY_SHORT_TERM_TTL overlays this value. Goal / Plan / Decision / ToolCall / Observation.
+  short_term_ttl: 24h
+  # MEMORY_TASK_TTL overlays this value. Task / Conclusion / Evidence / Failures / SuccessfulActions.
+  task_ttl: 7d
+  # MEMORY_LONG_TERM_TTL overlays this value. 0 means no expiry.
+  long_term_ttl: 0s
+  # MEMORY_SEARCH_LIMIT overlays this value.
+  search_limit: 20
+
+guardrail:
+  # GUARDRAIL_MEDIUM_AUTO overlays this value. MEDIUM auto-executes when true; HIGH/CRITICAL always need approval.
+  medium_auto: true
+  # GUARDRAIL_APPROVAL_TTL overlays this value. Pending approval lifetime.
+  approval_ttl: 15m
+
+observability:
+  service_name: autonomous-agent
+  # OTEL_EXPORTER_OTLP_ENDPOINT overlays this value. Empty keeps traces/metrics in-process.
+  otlp_endpoint: ""
+  traces: true
+  metrics: true
+
+resilience:
+  retry:
+    max_attempts: 3
+    backoff: 200ms
+  circuit_breaker:
+    failure_threshold: 5
+    reset_timeout: 30s
+  rate_limit:
+    rps: 50
+    burst: 100
+  concurrency:
+    max: 16
+
+log:
+  level: info
+  format: json
