@@ -48,6 +48,7 @@ export interface TimelineItem {
     | 'understanding'
     | 'plan'
     | 'decision'
+    | 'thinking'
     | 'semantic'
     | 'mcp'
     | 'tool'
@@ -62,6 +63,7 @@ export interface TimelineItem {
   title: string
   subtitle?: string
   timestamp: string
+  durationMs?: number
   eventId: string
   taskId?: string
   related?: {

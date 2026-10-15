@@ -89,6 +89,7 @@ export function eventsFromBackendDelta(
     push('agent.completed', next.steps?.length ?? 1, next.updated_at, {
       status: 'COMPLETED',
       confidence: next.confidence,
+      boardUrl: boardLink(next),
     })
   }
   if (becameTerminal && (next.status === 'FAILED' || next.status === 'ABORTED')) {
@@ -97,7 +98,26 @@ export function eventsFromBackendDelta(
     })
   }
 
+  events.sort((a, b) => {
+    const left = Date.parse(a.timestamp)
+    const right = Date.parse(b.timestamp)
+    if (!Number.isFinite(left) || !Number.isFinite(right) || left === right) return 0
+    return left - right
+  })
   return events
+}
+
+export function boardLink(run: BackendRun): string {
+  const raw = run.answer || run.final_result || ''
+  const parsed = tryParseJson(raw)
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return ''
+  const row = parsed as Record<string, unknown>
+  if (typeof row.url === 'string' && /^https?:\/\//.test(row.url)) return row.url
+  const id = row.id
+  const origin = String(import.meta.env.VITE_BI_WEB_URL || 'http://localhost:5174').replace(/\/$/, '')
+  if (typeof id === 'number' && id > 0) return `${origin}/board/${id}`
+  if (typeof id === 'string' && /^\d+$/.test(id)) return `${origin}/board/${id}`
+  return ''
 }
 
 export function reportFromRun(run: BackendRun): Report | null {
@@ -203,6 +223,7 @@ function decisionFromRecord(runId: string, step: number, raw: Record<string, unk
     runId,
     step,
     type: str(raw.type, 'CALL_TOOL') as Decision['type'],
+    thought: str(raw.thought) || undefined,
     objective: str(raw.objective),
     summary: str(raw.reason),
     reason: str(raw.reason),

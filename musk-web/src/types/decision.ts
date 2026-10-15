@@ -14,6 +14,7 @@ export interface Decision {
   runId: string
   step: number
   type: DecisionType
+  thought?: string
   objective: string
   summary: string
   reason: string

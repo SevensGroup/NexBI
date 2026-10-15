@@ -60,6 +60,7 @@ func (v *Validator) Validate(d *Decision) error {
 	}
 
 	d.Type = DecisionType(strings.ToUpper(strings.TrimSpace(string(d.Type))))
+	d.Thought = strings.TrimSpace(d.Thought)
 	d.Reason = strings.TrimSpace(d.Reason)
 	d.Objective = strings.TrimSpace(d.Objective)
 	d.Tool = strings.TrimSpace(d.Tool)

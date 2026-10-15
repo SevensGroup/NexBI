@@ -41,14 +41,15 @@ const (
 // Decision is the structured next-step produced by the LLM.
 // It must not include chain-of-thought or a fabricated tool result.
 type Decision struct {
-	Type           DecisionType   `json:"type" jsonschema:"required,enum=CALL_TOOL,enum=DELEGATE_AGENT,enum=REPLAN,enum=REFLECT,enum=ASK_USER,enum=FINISH,enum=ABORT" jsonschema_description:"Next action type"`
-	Reason         string         `json:"reason" jsonschema:"required" jsonschema_description:"Short decision summary. No chain-of-thought."`
-	Objective      string         `json:"objective,omitempty" jsonschema_description:"Current objective or user-facing conclusion/question"`
-	Tool           string         `json:"tool,omitempty" jsonschema_description:"Tool name when type is CALL_TOOL"`
-	Arguments      FlexibleMap    `json:"arguments,omitempty" jsonschema_description:"Tool or action arguments as a JSON object (not a string). Must not contain a tool result."`
-	ExpectedResult string         `json:"expected_result,omitempty" jsonschema_description:"What a successful action should produce. Not an actual tool result."`
-	Confidence     float64        `json:"confidence" jsonschema:"required,minimum=0,maximum=1" jsonschema_description:"Confidence in [0, 1]"`
-	Risk           string         `json:"risk,omitempty" jsonschema_description:"Risk note for this action"`
+	Type           DecisionType `json:"type" jsonschema:"required,enum=CALL_TOOL,enum=DELEGATE_AGENT,enum=REPLAN,enum=REFLECT,enum=ASK_USER,enum=FINISH,enum=ABORT" jsonschema_description:"Next action type"`
+	Thought        string       `json:"thought,omitempty" jsonschema_description:"Visible thinking in Chinese, 2 to 4 first-person sentences. What you noticed and why the next action follows. Not a tool result."`
+	Reason         string       `json:"reason" jsonschema:"required" jsonschema_description:"One-line summary of the decision. No hidden scratchpad."`
+	Objective      string       `json:"objective,omitempty" jsonschema_description:"Current objective or user-facing conclusion/question"`
+	Tool           string       `json:"tool,omitempty" jsonschema_description:"Tool name when type is CALL_TOOL"`
+	Arguments      FlexibleMap  `json:"arguments,omitempty" jsonschema_description:"Tool or action arguments as a JSON object (not a string). Must not contain a tool result."`
+	ExpectedResult string       `json:"expected_result,omitempty" jsonschema_description:"What a successful action should produce. Not an actual tool result."`
+	Confidence     float64      `json:"confidence" jsonschema:"required,minimum=0,maximum=1" jsonschema_description:"Confidence in [0, 1]"`
+	Risk           string       `json:"risk,omitempty" jsonschema_description:"Risk note for this action"`
 }
 
 // Observation is what the engine persists after a decision.

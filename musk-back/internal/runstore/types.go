@@ -10,35 +10,35 @@ import (
 type Status string
 
 const (
-	StatusCreated          Status = "CREATED"
-	StatusRunning          Status = "RUNNING"
-	StatusWaitingApproval  Status = "WAITING_APPROVAL"
-	StatusCompleted        Status = "COMPLETED"
-	StatusFailed           Status = "FAILED"
-	StatusAborted          Status = "ABORTED"
+	StatusCreated         Status = "CREATED"
+	StatusRunning         Status = "RUNNING"
+	StatusWaitingApproval Status = "WAITING_APPROVAL"
+	StatusCompleted       Status = "COMPLETED"
+	StatusFailed          Status = "FAILED"
+	StatusAborted         Status = "ABORTED"
 )
 
 // Run is a persisted Agent Run: goal, status, steps, decisions, tools, observations, reflection, result.
 type Run struct {
-	ID            string                    `json:"id"`
-	Goal          string                    `json:"goal"`
-	Status        Status                    `json:"status"`
-	Steps         []Step                    `json:"steps"`
-	Decisions     []DecisionRecord          `json:"decisions"`
-	ToolCalls     []ToolCallRecord          `json:"tool_calls"`
-	Observations  []ObservationRecord       `json:"observations"`
-	Reflections   []ReflectionRecord        `json:"reflections"`
-	FinalResult   string                    `json:"final_result,omitempty"`
-	Answer        string                    `json:"answer,omitempty"`
-	Confidence    float64                   `json:"confidence,omitempty"`
-	Evidence      []any                     `json:"evidence,omitempty"`
-	TokenUsage    observability.TokenUsage  `json:"token_usage"`
-	CostUSD       float64                   `json:"cost_usd,omitempty"`
-	LatencyMS     int64                     `json:"latency_ms,omitempty"`
-	Error         string                    `json:"error,omitempty"`
-	ApprovalID    string                    `json:"approval_id,omitempty"`
-	CreatedAt     time.Time                 `json:"created_at"`
-	UpdatedAt     time.Time                 `json:"updated_at"`
+	ID           string                   `json:"id"`
+	Goal         string                   `json:"goal"`
+	Status       Status                   `json:"status"`
+	Steps        []Step                   `json:"steps"`
+	Decisions    []DecisionRecord         `json:"decisions"`
+	ToolCalls    []ToolCallRecord         `json:"tool_calls"`
+	Observations []ObservationRecord      `json:"observations"`
+	Reflections  []ReflectionRecord       `json:"reflections"`
+	FinalResult  string                   `json:"final_result,omitempty"`
+	Answer       string                   `json:"answer,omitempty"`
+	Confidence   float64                  `json:"confidence,omitempty"`
+	Evidence     []any                    `json:"evidence,omitempty"`
+	TokenUsage   observability.TokenUsage `json:"token_usage"`
+	CostUSD      float64                  `json:"cost_usd,omitempty"`
+	LatencyMS    int64                    `json:"latency_ms,omitempty"`
+	Error        string                   `json:"error,omitempty"`
+	ApprovalID   string                   `json:"approval_id,omitempty"`
+	CreatedAt    time.Time                `json:"created_at"`
+	UpdatedAt    time.Time                `json:"updated_at"`
 }
 
 // Step is one decision-loop iteration.
@@ -52,6 +52,7 @@ type Step struct {
 type DecisionRecord struct {
 	StepID         string         `json:"step_id,omitempty"`
 	Type           string         `json:"type"`
+	Thought        string         `json:"thought,omitempty"`
 	Reason         string         `json:"reason"`
 	Objective      string         `json:"objective,omitempty"`
 	Tool           string         `json:"tool,omitempty"`

@@ -174,6 +174,7 @@ func (p *Planner) systemPrompt() string {
 	b.WriteString("Each task must have a clear, concrete expected_output.\n")
 	b.WriteString("Identify dependencies by task id. Tasks with no mutual dependencies may run in parallel.\n")
 	b.WriteString(fmt.Sprintf("Do not split excessively. Return at most %d tasks. A simple goal is exactly one task.\n", p.MaxTasks()))
+	b.WriteString("If the goal is to create or update a BI dashboard (看板), return two or three ordered tasks: query the ads rows with bi_dashboard, decide which metrics and slices those numbers support, then create the board from that observation. The last task's expected_output is the dashboard url. Do not collapse this into a single create, and do not plan placeholder metrics.\n")
 	b.WriteString("Output a single structured Plan that matches the JSON Schema.\n")
 	b.WriteString("Do not output chain-of-thought, hidden reasoning, or step-by-step scratch work.\n")
 	b.WriteString("JSON Schema:\n")

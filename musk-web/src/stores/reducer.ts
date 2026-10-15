@@ -39,6 +39,7 @@ export interface AgentRunState {
   selectedEvidenceId: string | null
   error: string | null
   compiledDsl: Record<string, unknown> | null
+  boardUrl: string
 }
 
 export function createEmptyRunState(): AgentRunState {
@@ -66,6 +67,7 @@ export function createEmptyRunState(): AgentRunState {
     selectedEvidenceId: null,
     error: null,
     compiledDsl: null,
+    boardUrl: '',
   }
 }
 
@@ -121,7 +123,8 @@ export function applyAgentEvent(prev: AgentRunState, rawEvent: AgentEvent): Agen
     case 'decision.created': {
       const decision = event.payload.decision as Decision
       state.decisions = [...state.decisions, decision]
-      pushTimeline(state, event, 'decision', 'Autonomous Decision', `${decision.type} · ${decision.summary}`)
+      const thought = (decision.thought || decision.reason || decision.summary || '').trim()
+      if (thought) pushTimeline(state, event, 'thinking', 'Thought', thought)
       break
     }
     case 'tool.started': {
@@ -161,7 +164,7 @@ export function applyAgentEvent(prev: AgentRunState, rawEvent: AgentEvent): Agen
     case 'reflection.created': {
       const reflection = event.payload.reflection as Reflection
       state.reflections = [...state.reflections, reflection]
-      pushTimeline(state, event, 'reflection', 'Reflection', reflection.summary || reflection.nextAction)
+      pushTimeline(state, event, 'thinking', 'Thought', reflectionThought(reflection))
       break
     }
     case 'agent.delegated':
@@ -253,7 +256,10 @@ export function applyAgentEvent(prev: AgentRunState, rawEvent: AgentEvent): Agen
     }
     case 'agent.completed':
       state.status = 'COMPLETED'
-      pushTimeline(state, event, 'report', 'Completed', String(event.payload.status ?? 'COMPLETED'))
+      if (typeof event.payload.boardUrl === 'string' && event.payload.boardUrl) {
+        state.boardUrl = event.payload.boardUrl
+      }
+      pushTimeline(state, event, 'report', 'Completed', state.boardUrl || String(event.payload.status ?? 'COMPLETED'))
       break
     case 'agent.failed':
       state.status = 'FAILED'
@@ -267,6 +273,21 @@ export function applyAgentEvent(prev: AgentRunState, rawEvent: AgentEvent): Agen
   return state
 }
 
+function reflectionThought(reflection: Reflection): string {
+  const summary = reflection.summary?.trim()
+  if (summary && summary !== reflection.nextAction) return summary
+  switch (reflection.nextAction) {
+    case 'FINISH':
+      return 'The goal is done and the evidence is enough, so I can stop.'
+    case 'REPLAN':
+      return 'This plan is stuck. I should replan before the next action.'
+    case 'ASK_USER':
+      return 'I am missing something only the user can answer, so I should ask.'
+    default:
+      return 'This step is not the whole goal. I should read what just came back and decide the next move.'
+  }
+}
+
 function pushTimeline(
   state: AgentRunState,
   event: AgentEvent,
@@ -274,9 +295,13 @@ function pushTimeline(
   title: string,
   subtitle?: string,
 ): void {
+  const previous = state.timeline.at(-1)
+  const started = previous ? Date.parse(previous.timestamp) : NaN
+  const ended = Date.parse(event.timestamp)
+  const durationMs = Number.isFinite(started) && Number.isFinite(ended) && ended >= started ? ended - started : undefined
   state.timeline = [
     ...state.timeline,
-    { id: `tl-${event.id}`, kind, title, subtitle, timestamp: event.timestamp, eventId: event.id },
+    { id: `tl-${event.id}`, kind, title, subtitle, timestamp: event.timestamp, eventId: event.id, durationMs },
   ]
 }
 

@@ -46,6 +46,13 @@ watch(
       <button class="ml-3 text-accent underline" type="button" @click="router.push('/dashboard')">Open Dashboard</button>
     </div>
     <div
+      v-else-if="run.state.boardUrl"
+      class="shrink-0 border-b border-line bg-raised/60 px-4 py-3 text-sm"
+    >
+      <span class="text-mute">看板地址</span>
+      <a class="ml-3 text-accent underline" :href="run.state.boardUrl" target="_blank" rel="noreferrer">{{ run.state.boardUrl }}</a>
+    </div>
+    <div
       v-else-if="failMessage"
       data-testid="run-failure-banner"
       class="shrink-0 border-b border-rose-900/70 bg-rose-950/50 px-4 py-2 text-sm text-rose-200"

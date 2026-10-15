@@ -212,6 +212,7 @@ func (e *Engine) systemPrompt() string {
 	b.WriteString("next_action must be one of CONTINUE, REPLAN, FINISH, ASK_USER.\n")
 	b.WriteString("CONTINUE if more work is needed. REPLAN if the current plan is stuck or wrong.\n")
 	b.WriteString("FINISH only when the goal is satisfied and evidence is sufficient. ASK_USER when a required data backend is unavailable (for example Elasticsearch MCP is not registered) or only the user can supply missing information. Do not REPLAN to retry a tool that is not registered.\n")
+	b.WriteString("If the goal is a BI dashboard (看板), a create by itself is not enough. Set goal_satisfied=false, evidence_sufficient=false, and next_action=CONTINUE until observations include a bi_dashboard query of the ads rows and a later create whose metrics, rows, and summary come from that query. Placeholder values or an empty table mean the goal is not met.\n")
 	b.WriteString("Do not output chain-of-thought.\n")
 	b.WriteString("JSON Schema:\n")
 	b.WriteString(e.schemaJSON)

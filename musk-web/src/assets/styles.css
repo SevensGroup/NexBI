@@ -84,6 +84,61 @@ body,
   50% { opacity: 0.55; }
 }
 
+.timeline-in {
+  animation: timeline-in 0.4s ease-out both;
+}
+
+@keyframes timeline-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.thinking-caret::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: #5b8def;
+  animation: thinking-caret 1s steps(1) infinite;
+}
+
+@keyframes thinking-caret {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.think-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #5b8def;
+  animation: think-dot 1.1s ease-in-out infinite;
+}
+
+.think-dot:nth-child(2) { animation-delay: 0.15s; }
+.think-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes think-dot {
+  0%, 70%, 100% { opacity: 0.25; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-3px); }
+}
+
+.skeleton-line {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #181c24 0%, #3a4456 45%, #181c24 100%);
+  background-size: 220% 100%;
+  animation: skeleton-slide 1.3s linear infinite;
+}
+
+@keyframes skeleton-slide {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
 .vue-flow {
   background: #12151b;
 }

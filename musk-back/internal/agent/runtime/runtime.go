@@ -25,6 +25,7 @@ import (
 	"autonomous-agent/internal/runstore"
 	"autonomous-agent/internal/semantic"
 	"autonomous-agent/internal/tools"
+	"autonomous-agent/internal/tools/bi"
 	"autonomous-agent/internal/tools/elasticsearch"
 )
 
@@ -162,6 +163,10 @@ func New(ctx context.Context, provider model.Provider, agentCfg config.AgentConf
 	if err := memory.RegisterTools(reg, store); err != nil {
 		_ = store.Close()
 		return nil, fmt.Errorf("register memory tools: %w", err)
+	}
+	if err := bi.Register(reg, bi.ConfigFromEnv()); err != nil {
+		_ = store.Close()
+		return nil, fmt.Errorf("register bi dashboard tool: %w", err)
 	}
 
 	recallLimit := memoryCfg.SearchLimit
@@ -1156,6 +1161,7 @@ func (r *Runtime) persistDecision(ctx context.Context, state *decision.AgentStat
 	}
 	r.remember.SaveDecision(ctx, runID, map[string]any{
 		"type":            string(d.Type),
+		"thought":         d.Thought,
 		"reason":          d.Reason,
 		"objective":       d.Objective,
 		"tool":            d.Tool,

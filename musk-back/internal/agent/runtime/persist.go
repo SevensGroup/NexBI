@@ -110,6 +110,7 @@ func (r *Runtime) recordDecision(ctx context.Context, runID, stepID string, d *d
 		run.Decisions = append(run.Decisions, runstore.DecisionRecord{
 			StepID:         stepID,
 			Type:           string(d.Type),
+			Thought:        d.Thought,
 			Reason:         d.Reason,
 			Objective:      d.Objective,
 			Tool:           d.Tool,

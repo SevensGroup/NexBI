@@ -17,6 +17,7 @@ const starting = ref(false)
 const goal = ref(DEFAULT_GOAL)
 const stats = ref(MOCK_DASHBOARD)
 const mock = isMockMode()
+const biWeb = (import.meta.env.VITE_BI_WEB_URL || 'http://localhost:5174').replace(/\/$/, '')
 
 const liveHint = computed(() =>
   mock ? 'Mock replay' : 'Live musk-back · POST /api/v1/agent/run { message }',
@@ -45,6 +46,9 @@ async function startFromDashboard(): Promise<void> {
   <div class="h-full overflow-auto p-6">
     <h1 class="text-lg font-medium">Dashboard</h1>
     <p class="mt-1 text-sm text-mute">Autonomous Agent Operating Console · {{ liveHint }}</p>
+    <p class="mt-3 max-w-3xl text-xs text-mute">
+      说「做一个昨日消耗看板，列出渠道和花费」，Agent 会把看板写到 {{ biWeb }}（演示账号 demo@sevens.local）。
+    </p>
     <form class="mt-4 flex max-w-3xl items-end gap-2" @submit.prevent="startFromDashboard">
       <label class="flex-1 text-xs text-mute">
         Goal
