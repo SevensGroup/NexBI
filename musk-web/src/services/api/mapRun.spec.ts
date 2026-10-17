@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { eventsFromBackendDelta, normalizeReport } from './mapRun'
+import { boardLink, eventsFromBackendDelta, normalizeReport } from './mapRun'
 import type { BackendRun } from '@/types/run'
 
 const base = (over: Partial<BackendRun> = {}): BackendRun => ({
@@ -70,6 +70,23 @@ describe('eventsFromBackendDelta', () => {
     expect(failEv?.payload.error).toBe('invalid decision: agent is required for DELEGATE_AGENT')
     const decision = events.find((e) => e.type === 'decision.created')
     expect((decision?.payload.decision as { reason: string }).reason).toContain('data collection and baseline comparison')
+  })
+
+  it('reads a /bi/<code> url from the finished answer', () => {
+    const run = base({
+      status: 'COMPLETED',
+      answer: JSON.stringify({ code: 'sfasffdsfdf', url: 'http://localhost:5173/bi/sfasffdsfdf' }),
+    })
+    expect(boardLink(run)).toBe('http://localhost:5173/bi/sfasffdsfdf')
+  })
+
+  it('reads the board url from the create tool result when the answer omits it', () => {
+    const run = base({
+      status: 'COMPLETED',
+      answer: 'The board is ready.',
+      tool_calls: [{ tool: 'bi_dashboard', result: { url: 'http://localhost:5173/bi/sfasffdsfdf', code: 'sfasffdsfdf' } }],
+    })
+    expect(boardLink(run)).toBe('http://localhost:5173/bi/sfasffdsfdf')
   })
 
   it('emits agent.failed when polling sees FAILED even with skipBootstrap', () => {

@@ -79,7 +79,7 @@ onMounted(async () => {
     <WorkspaceShell title="Advertising Autonomous Analyst" agent-id="advertising-analyst">
       <template #left>
         <div class="space-y-3">
-          <div class="text-[11px] uppercase text-mute">Pipeline</div>
+          <h2 class="text-sm font-medium">Pipeline</h2>
           <ol class="space-y-1 text-[11px] text-mute">
             <li>Goal → Understanding → Planning</li>
             <li>Decision → Semantic Query → MCP</li>
@@ -90,13 +90,13 @@ onMounted(async () => {
       </template>
     </WorkspaceShell>
     <div class="grid max-h-[42%] grid-cols-12 gap-2 overflow-auto border-t border-line p-3">
-      <div class="col-span-5 h-40 rounded border border-line bg-panel p-2">
+      <div class="col-span-5 h-40 overflow-hidden rounded-xl border border-line bg-panel p-2">
         <VChart class="h-full" :option="trend" autoresize />
       </div>
-      <div class="col-span-4 h-40 rounded border border-line bg-panel p-2">
+      <div class="col-span-4 h-40 overflow-hidden rounded-xl border border-line bg-panel p-2">
         <VChart class="h-full" :option="campaign" autoresize />
       </div>
-      <div class="col-span-3 h-40 rounded border border-line bg-panel p-2">
+      <div class="col-span-3 h-40 overflow-hidden rounded-xl border border-line bg-panel p-2">
         <VChart class="h-full" :option="creative" autoresize />
       </div>
       <div class="col-span-4 min-h-0 overflow-auto">
@@ -107,7 +107,7 @@ onMounted(async () => {
         <ReflectionCard v-if="run.latestReflection" :reflection="run.latestReflection" />
         <ToolExecutionCard v-if="run.state.toolCalls.at(-1)" :tool="run.state.toolCalls.at(-1)!" />
       </div>
-      <div class="col-span-4 overflow-auto rounded border border-line bg-panel p-3">
+      <div class="col-span-4 overflow-auto rounded-xl border border-line bg-panel p-4">
         <FinalReport v-if="run.state.report" :report="run.state.report" @evidence="onEvidence" />
         <div v-else class="text-xs text-mute">Report appears after reflection + reviewer.</div>
       </div>

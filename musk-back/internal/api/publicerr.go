@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 
 	"autonomous-agent/internal/agent/decision"
+	"autonomous-agent/internal/llmerr"
 )
 
 const (
@@ -33,10 +34,11 @@ func publicRunError(err error) (status int, msg string) {
 		return http.StatusGatewayTimeout, "agent run exceeded max runtime"
 	case errors.Is(err, decision.ErrInvalidDecision):
 		return http.StatusBadGateway, truncateRunes(redactSecrets(raw), maxPublicErrorRunes)
-	case isLLMAuthError(lower):
-		return http.StatusBadGateway, "LLM authentication failed (401): set LLM_API_KEY to a real key and restart. Placeholder values from .env.example are rejected by the provider."
-	case strings.Contains(lower, "status code: 429") || strings.Contains(lower, "rate limit") || strings.Contains(lower, "too many requests"):
-		return http.StatusServiceUnavailable, "LLM rate limited: retry later or check provider quota"
+	case llmerr.Is(err):
+		if strings.Contains(lower, "status code: 429") || strings.Contains(lower, "rate limit") || strings.Contains(lower, "too many requests") || strings.Contains(lower, "quota exceeded") {
+			return http.StatusServiceUnavailable, llmerr.Public
+		}
+		return http.StatusBadGateway, llmerr.Public
 	case strings.Contains(lower, "deadline exceeded") || strings.Contains(lower, "context deadline") || strings.Contains(lower, "timeout"):
 		return http.StatusGatewayTimeout, "LLM request timed out: check LLM_BASE_URL and network"
 	case strings.Contains(lower, "connection refused") || strings.Contains(lower, "no such host") || strings.Contains(lower, "network is unreachable"):
@@ -44,16 +46,6 @@ func publicRunError(err error) (status int, msg string) {
 	default:
 		return http.StatusInternalServerError, "agent run failed: " + truncateRunes(redactSecrets(raw), maxPublicErrorRunes)
 	}
-}
-
-func isLLMAuthError(lower string) bool {
-	if strings.Contains(lower, "incorrect api key") || strings.Contains(lower, "invalid_api_key") || strings.Contains(lower, "invalid api key") {
-		return true
-	}
-	if strings.Contains(lower, "status code: 401") || strings.Contains(lower, "401 unauthorized") {
-		return true
-	}
-	return strings.Contains(lower, "status code: 403") || strings.Contains(lower, "403 forbidden")
 }
 
 func redactSecrets(s string) string {

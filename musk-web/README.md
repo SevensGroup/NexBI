@@ -64,7 +64,7 @@ VITE_USE_MOCK=false
 
 ## Live self-test (real LLM, spends tokens)
 
-Prerequisites: `musk-back/.env` lines 1–3 (`LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` = SiliconFlow DeepSeek-V4-Pro). **Do not commit `.env`.**
+Prerequisites: `musk-back/.env` lines 1–3 (`LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` = Gemini `gemini-3.5-flash`). **Do not commit `.env`.**
 
 ```bash
 # terminal 1

@@ -15,6 +15,7 @@ import (
 	"autonomous-agent/internal/agent/planner"
 	"autonomous-agent/internal/agent/reflection"
 	"autonomous-agent/internal/analyst"
+	"autonomous-agent/internal/board"
 	"autonomous-agent/internal/config"
 	"autonomous-agent/internal/guardrail"
 	"autonomous-agent/internal/logger"
@@ -55,10 +56,11 @@ type AgentInfo struct {
 	OutputSchema any      `json:"output_schema,omitempty"`
 }
 
-// Deps is optional production wiring (telemetry, run store). Tests omit it.
+// Deps is optional production wiring (telemetry, run store, boards). Tests omit it.
 type Deps struct {
 	Telemetry *observability.Telemetry
 	Runs      runstore.Store
+	Boards    *board.Store
 }
 
 // Decider is the decision-engine contract used by the runtime loop.
@@ -96,11 +98,13 @@ type Runtime struct {
 	logger      logger.Logger
 	telemetry   *observability.Telemetry
 	runs        runstore.Store
+	boards      *board.Store
 	catalog     *semantic.Registry
 	budget      config.BudgetConfig
 	agentName   string
 	ownsRuns    bool
 	ownsTel     bool
+	ownsBoards  bool
 }
 
 // New constructs an Eino-backed decision runtime from a model provider.
@@ -164,8 +168,19 @@ func New(ctx context.Context, provider model.Provider, agentCfg config.AgentConf
 		_ = store.Close()
 		return nil, fmt.Errorf("register memory tools: %w", err)
 	}
-	if err := bi.Register(reg, bi.ConfigFromEnv()); err != nil {
+	boards, ownsBoards, err := openBoards(ctx, extras)
+	if err != nil {
 		_ = store.Close()
+		return nil, fmt.Errorf("open board store: %w", err)
+	}
+	if boards.UsesDatabase() {
+		log.InfoContext(ctx, "published board links stored in mysql", "table", "bi_public_board")
+	}
+	if err := bi.Register(reg, boards); err != nil {
+		_ = store.Close()
+		if ownsBoards {
+			_ = boards.Close()
+		}
 		return nil, fmt.Errorf("register bi dashboard tool: %w", err)
 	}
 
@@ -207,6 +222,9 @@ func New(ctx context.Context, provider model.Provider, agentCfg config.AgentConf
 		}, log)
 		if err != nil {
 			_ = store.Close()
+			if ownsBoards {
+				_ = boards.Close()
+			}
 			return nil, fmt.Errorf("setup observability: %w", err)
 		}
 		ownsTel = true
@@ -218,6 +236,9 @@ func New(ctx context.Context, provider model.Provider, agentCfg config.AgentConf
 		runs, err = runstore.Open(ctx, memoryCfg.PostgresURL, log)
 		if err != nil {
 			_ = store.Close()
+			if ownsBoards {
+				_ = boards.Close()
+			}
 			if ownsTel {
 				_ = tel.Shutdown(ctx)
 			}
@@ -245,14 +266,35 @@ func New(ctx context.Context, provider model.Provider, agentCfg config.AgentConf
 		logger:      log,
 		telemetry:   tel,
 		runs:        runs,
+		boards:      boards,
 		catalog:     catalog,
 		budget:      budget,
 		agentName:   agentCfg.Name,
 		ownsRuns:    ownsRuns,
 		ownsTel:     ownsTel,
+		ownsBoards:  ownsBoards,
 	}
 	rt.team = multi.NewTeam(multi.DefaultSpecs(agentCfg.MaxSteps), rt.spawnSpecialist)
 	return rt, nil
+}
+
+// Boards is the dashboard catalog published by the bi_dashboard tool.
+func (r *Runtime) Boards() *board.Store {
+	if r == nil {
+		return nil
+	}
+	return r.boards
+}
+
+func openBoards(ctx context.Context, extras []Deps) (*board.Store, bool, error) {
+	if len(extras) > 0 && extras[0].Boards != nil {
+		return extras[0].Boards, false, nil
+	}
+	store, err := board.Open(ctx, "", "")
+	if err != nil {
+		return nil, false, err
+	}
+	return store, true, nil
 }
 
 // Close releases stores owned by this runtime. Child specialists do not close parent resources.
@@ -273,6 +315,11 @@ func (r *Runtime) Close() error {
 	}
 	if r.telemetry != nil && r.ownsTel {
 		if err := r.telemetry.Shutdown(context.Background()); err != nil && first == nil {
+			first = err
+		}
+	}
+	if r.boards != nil && r.ownsBoards {
+		if err := r.boards.Close(); err != nil && first == nil {
 			first = err
 		}
 	}
@@ -371,6 +418,21 @@ func (r *Runtime) loop(ctx context.Context, state *decision.AgentState, sched *p
 		r.recordStep(ctx, state.RunID, stepID, state.CurrentStep)
 
 		d, err := r.engine.Decide(ctx, state)
+		if err != nil && errors.Is(err, decision.ErrDuplicateAction) {
+			state.Observations = append(state.Observations, decision.Observation{
+				Summary:    "duplicate action skipped",
+				Reason:     err.Error(),
+				Evidence:   "That tool call already ran. Use the previous observation. If the goal is a dashboard and the ads rows are already in an observation, call bi_dashboard with action create. Do not repeat the same query.",
+				Confidence: 0.4,
+			})
+			state.CurrentStep++
+			r.logger.InfoContext(ctx, "duplicate action skipped",
+				"request_id", requestid.From(ctx),
+				"run_id", state.RunID,
+				"error", err,
+			)
+			continue
+		}
 		if err != nil {
 			r.logger.ErrorContext(ctx, "agent run failed",
 				"request_id", requestid.From(ctx),
@@ -785,6 +847,20 @@ func (r *Runtime) syncObjective(state *decision.AgentState, sched *planner.TaskS
 	}
 }
 
+func lastDashboardQuery(state *decision.AgentState) string {
+	if state == nil {
+		return ""
+	}
+	for i := len(state.ToolCalls) - 1; i >= 0; i-- {
+		call := state.ToolCalls[i]
+		if call.Tool != "bi_dashboard" || !call.Success || !strings.Contains(call.Result, `"list"`) {
+			continue
+		}
+		return call.Result
+	}
+	return ""
+}
+
 func (r *Runtime) act(ctx context.Context, state *decision.AgentState, d *decision.Decision, sched *planner.TaskScheduler) error {
 	return r.executeTool(ctx, state, d, sched, true)
 }
@@ -801,6 +877,10 @@ func (r *Runtime) executeTool(ctx context.Context, state *decision.AgentState, d
 	input := d.Arguments
 	if input == nil {
 		input = map[string]any{}
+		d.Arguments = input
+	}
+	if d.Tool == "bi_dashboard" {
+		board.FillCreate(input, lastDashboardQuery(state), strings.TrimSpace(d.Objective+" "+d.Reason))
 	}
 
 	if checkGuard {
@@ -1121,6 +1201,10 @@ func (r *Runtime) observe(ctx context.Context, state *decision.AgentState, d *de
 	}
 	if n := len(state.ToolCalls); n > 0 {
 		state.ToolCalls[n-1].Result = evidence
+		state.ToolCalls[n-1].Success = result.Success
+	}
+	if !result.Success {
+		state.Forget(d)
 	}
 	state.Observations = append(state.Observations, decision.Observation{
 		Summary:    summary,

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter, RouterView } from 'vue-router'
+import { logout } from '@/auth/session'
 import ConnectionStatus from '@/components/common/ConnectionStatus.vue'
 import { useAgentRunStore } from '@/stores/agentRun'
 import { runFailureBanner } from '@/utils/runDisplay'
@@ -28,6 +29,11 @@ const needsApproval = computed(() => runStore.state.status === 'WAITING_APPROVAL
 const failMessage = computed(() => runFailureBanner(runStore.state.status, runStore.state.error))
 const onRunDetail = computed(() => route.name === 'run-detail')
 
+function signOut(): void {
+  logout()
+  void router.push('/login')
+}
+
 function isActive(to: string): boolean {
   if (to === '/agents') return active.value.startsWith('/agents')
   if (to === '/runs') return active.value.startsWith('/runs')
@@ -37,23 +43,28 @@ function isActive(to: string): boolean {
 
 <template>
   <div class="flex h-full min-h-0 flex-col bg-canvas text-ink">
-    <header class="flex h-12 shrink-0 items-center gap-6 border-b border-line px-4">
-      <button class="font-semibold tracking-tight" type="button" @click="router.push('/dashboard')">
+    <header class="flex h-12 shrink-0 items-center gap-3 border-b border-line px-3 sm:px-4">
+      <button class="shrink-0 font-semibold tracking-tight" type="button" @click="router.push('/dashboard')">
         MUSK
-        <span class="ml-2 text-xs font-normal text-mute">Agent Console</span>
+        <span class="ml-2 hidden text-xs font-normal text-mute sm:inline">Agent Console</span>
       </button>
-      <nav class="flex flex-1 items-center gap-1 overflow-x-auto text-sm">
-        <RouterLink
-          v-for="item in nav"
-          :key="item.to"
-          :to="item.to"
-          class="rounded px-2.5 py-1 text-mute hover:bg-raised hover:text-ink"
-          :class="isActive(item.to) ? 'bg-raised text-ink' : ''"
-        >
-          {{ item.label }}
-        </RouterLink>
+      <nav class="min-w-0 flex-1 overflow-x-auto text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div class="mx-auto flex w-max min-w-full items-center justify-center gap-1">
+          <RouterLink
+            v-for="item in nav"
+            :key="item.to"
+            :to="item.to"
+            class="shrink-0 rounded px-2.5 py-1 text-mute hover:bg-raised hover:text-ink"
+            :class="isActive(item.to) ? 'bg-raised text-ink' : ''"
+          >
+            {{ item.label }}
+          </RouterLink>
+        </div>
       </nav>
-      <ConnectionStatus />
+      <div class="flex shrink-0 items-center gap-3">
+        <ConnectionStatus />
+        <button class="shrink-0 text-xs text-mute hover:text-ink" type="button" @click="signOut">Sign out</button>
+      </div>
     </header>
     <div
       v-if="failMessage && !onRunDetail"

@@ -95,9 +95,9 @@ Requirements: Go 1.24+, an OpenAI-compatible Chat Completions endpoint. Optional
 cp .env.example .env
 # edit LLM_BASE_URL, LLM_API_KEY, LLM_MODEL
 
-export LLM_BASE_URL=https://api.openai.com/v1
+export LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
 export LLM_API_KEY=sk-your-key
-export LLM_MODEL=gpt-4o-mini
+export LLM_MODEL=gemini-3.5-flash
 export AGENT_MAX_STEPS=30
 export AGENT_MAX_TOOL_CALLS=50
 export AGENT_MAX_RUNTIME=10m
@@ -125,7 +125,7 @@ curl -s -X POST http://127.0.0.1:8080/api/v1/agent/run \
 
 ## Live self-test (real LLM)
 
-This **spends SiliconFlow tokens**. It reads `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` from `musk-back/.env` at runtime. **Do not commit `.env` or hardcode the key.**
+This **spends Gemini tokens**. It reads `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` from `musk-back/.env` at runtime. **Do not commit `.env` or hardcode the key.**
 
 ```bash
 # start the server (Makefile sources .env)
@@ -136,7 +136,7 @@ make selftest
 # alias: make test-live
 ```
 
-`make test` stays the mocked Go unit suite (`go test ./...` does **not** hit SiliconFlow). `make selftest` is `-tags live` plus `/health` and `POST /api/v1/agent/run`.
+`make test` stays the mocked Go unit suite (`go test ./...` does **not** hit Gemini). `make selftest` is `-tags live` plus `/health` and `POST /api/v1/agent/run`.
 
 If the API is down the command exits with: start musk-back with musk-back/.env.
 

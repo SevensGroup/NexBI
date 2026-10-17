@@ -15,7 +15,7 @@ const run = useAgentRunStore()
 </script>
 
 <template>
-  <article class="rounded border border-line bg-panel p-3 text-sm">
+  <article class="rounded-xl border border-line bg-panel p-4 text-sm">
     <div class="flex items-center justify-between gap-2">
       <span class="font-mono text-xs">{{ tool.toolName }}</span>
       <ToolStatusBadge :status="tool.status" />

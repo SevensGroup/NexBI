@@ -29,17 +29,17 @@ async function onSubmit(goal: string): Promise<void> {
 
 <template>
   <div class="flex h-full min-h-0 flex-col">
-    <div class="flex items-center justify-between border-b border-line px-3 py-2">
-      <div>
-        <div class="text-sm font-medium">{{ title }}</div>
-        <div class="truncate text-[11px] text-mute">{{ run.state.goal || 'No active goal' }}</div>
-        <div v-if="run.state.runId" class="font-mono text-[10px] text-mute">{{ run.state.runId }}</div>
+    <div class="flex items-center justify-between gap-4 border-b border-line px-6 py-4">
+      <div class="min-w-0">
+        <h1 class="truncate text-xl font-semibold tracking-tight">{{ title }}</h1>
+        <p class="mt-1 truncate text-sm text-mute">{{ run.state.goal || 'No active goal' }}</p>
+        <p v-if="run.state.runId" class="mt-1 truncate font-mono text-xs text-mute">{{ run.state.runId }}</p>
       </div>
       <AgentStateBadge :status="badgeStatus" :live="Boolean(run.state.runId)" />
     </div>
     <div class="grid min-h-0 flex-1 grid-cols-12">
       <aside class="col-span-3 min-h-0 overflow-auto border-r border-line p-3">
-        <div class="mb-2 text-[11px] uppercase text-mute">Agents / Tasks</div>
+        <h2 class="mb-3 text-sm font-medium">Agents and tasks</h2>
         <slot name="left">
           <PlanPanel :plan="run.state.plan" />
         </slot>

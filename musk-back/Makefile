@@ -38,7 +38,7 @@ docker-up:
 docker-down:
 	docker compose down
 
-# Live SiliconFlow self-test. Loads musk-back/.env at runtime (never commit it).
+# Live Gemini self-test. Loads musk-back/.env at runtime (never commit it).
 # Spends real LLM tokens. Requires: make run (this Makefile sources .env).
 selftest test-live:
 	@set -a; \
@@ -48,12 +48,12 @@ selftest test-live:
 		echo "selftest: musk-back/.env must set LLM_API_KEY (do not commit .env)"; \
 		exit 1; \
 	fi; \
-	if [ "$$LLM_BASE_URL" != "https://api.siliconflow.cn/v1" ]; then \
-		echo "selftest: LLM_BASE_URL must be https://api.siliconflow.cn/v1"; \
+	if [ "$$LLM_BASE_URL" != "https://generativelanguage.googleapis.com/v1beta/openai" ]; then \
+		echo "selftest: LLM_BASE_URL must be https://generativelanguage.googleapis.com/v1beta/openai"; \
 		exit 1; \
 	fi; \
-	if [ "$$LLM_MODEL" != "deepseek-ai/DeepSeek-V4-Pro" ]; then \
-		echo "selftest: LLM_MODEL must be deepseek-ai/DeepSeek-V4-Pro"; \
+	if [ "$$LLM_MODEL" != "gemini-3.5-flash" ]; then \
+		echo "selftest: LLM_MODEL must be gemini-3.5-flash"; \
 		exit 1; \
 	fi; \
 	if ! curl -sf "$(MUSK_BACK_URL)/health" >/dev/null; then \
@@ -61,6 +61,6 @@ selftest test-live:
 		echo "  cd musk-back && make run"; \
 		exit 1; \
 	fi; \
-	echo "selftest: live LLM path (SiliconFlow DeepSeek-V4-Pro) — this spends real tokens"; \
+	echo "selftest: live LLM path (Gemini gemini-3.5-flash) — this spends real tokens"; \
 	MUSK_SELFTEST_ARTIFACT="$(CURDIR)/../musk-web/e2e/.last-live-run.json" \
 	go test -tags live -count=1 -timeout $(SELFTEST_TIMEOUT) ./internal/selftest/

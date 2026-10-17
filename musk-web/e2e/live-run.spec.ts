@@ -30,6 +30,7 @@ test.describe('live run pages', () => {
     const health = await request.get('http://127.0.0.1:8080/health')
     expect(health.ok(), 'start musk-back with musk-back/.env (cd musk-back && make run)').toBeTruthy()
 
+    await page.addInitScript(() => localStorage.setItem('musk-demo-session', '1'))
     const prior = loadArtifact()
     let runId = prior?.run_id && uuidRe.test(prior.run_id) ? prior.run_id : ''
 

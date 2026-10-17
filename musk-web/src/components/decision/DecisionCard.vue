@@ -9,7 +9,7 @@ defineProps<{ decision: Decision }>()
 </script>
 
 <template>
-  <article class="rounded border border-line bg-panel p-3 text-sm">
+  <article class="rounded-xl border border-line bg-panel p-4 text-sm">
     <div class="flex items-center justify-between gap-2">
       <span class="font-mono text-[11px] text-accent">{{ decision.type }}</span>
       <span class="text-[11px] text-mute">{{ formatTime(decision.timestamp) }} · step {{ decision.step }}</span>

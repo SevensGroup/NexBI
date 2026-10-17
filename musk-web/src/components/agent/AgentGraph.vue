@@ -55,7 +55,7 @@ function onNodeClick({ node }: NodeMouseEvent): void {
 </script>
 
 <template>
-  <div class="h-full min-h-[360px] rounded border border-line">
+  <div class="h-full min-h-[360px] overflow-hidden rounded-xl border border-line">
     <VueFlow :nodes="nodes" :edges="edges" :node-types="nodeTypes" fit-view-on-init @node-click="onNodeClick">
       <Background pattern-color="#2a303b" :gap="18" />
       <Controls />

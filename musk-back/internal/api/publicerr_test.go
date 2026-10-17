@@ -15,7 +15,7 @@ func TestPublicRunErrorLLMAuth(t *testing.T) {
 	if status != http.StatusBadGateway {
 		t.Fatalf("status = %d", status)
 	}
-	if !strings.Contains(msg, "LLM authentication failed") || !strings.Contains(msg, "LLM_API_KEY") {
+	if msg != "llm error" {
 		t.Fatalf("msg = %q", msg)
 	}
 	if strings.Contains(msg, "sk-live-secret123") || strings.Contains(msg, "sk-your-key") {

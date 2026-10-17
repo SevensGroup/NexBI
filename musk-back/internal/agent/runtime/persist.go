@@ -11,6 +11,7 @@ import (
 	"autonomous-agent/internal/agent/reflection"
 	"autonomous-agent/internal/analyst"
 	"autonomous-agent/internal/guardrail"
+	"autonomous-agent/internal/llmerr"
 	"autonomous-agent/internal/observability"
 	"autonomous-agent/internal/runstore"
 	"autonomous-agent/internal/tools"
@@ -186,6 +187,13 @@ func (r *Runtime) markWaiting(ctx context.Context, runID, approvalID string) {
 	})
 }
 
+func publicFailure(err error) string {
+	if llmerr.Is(err) {
+		return llmerr.Public
+	}
+	return err.Error()
+}
+
 func (r *Runtime) failRun(ctx context.Context, runID string, status runstore.Status, err error) {
 	if err == nil {
 		return
@@ -195,7 +203,7 @@ func (r *Runtime) failRun(ctx context.Context, runID string, status runstore.Sta
 	}
 	r.patchRun(ctx, runID, func(run *runstore.Run) {
 		run.Status = status
-		run.Error = err.Error()
+		run.Error = publicFailure(err)
 		r.applyTelemetry(run)
 	})
 }

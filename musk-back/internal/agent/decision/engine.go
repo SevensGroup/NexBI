@@ -115,6 +115,7 @@ func (e *Engine) Decide(ctx context.Context, state *AgentState) (*Decision, erro
 			}
 			return nil, err
 		}
+		prepareDashboardCall(d)
 		if err := e.policy.CheckDuplicate(state, d); err != nil {
 			return nil, err
 		}
@@ -126,6 +127,57 @@ func (e *Engine) Decide(ctx context.Context, state *AgentState) (*Decision, erro
 		return nil, lastErr
 	}
 	return nil, fmt.Errorf("%w: empty decision", ErrInvalidDecision)
+}
+
+// prepareDashboardCall fills bi_dashboard.action when the model names the tool but omits arguments.
+func prepareDashboardCall(d *Decision) {
+	if d == nil || d.Type != DecisionCallTool || strings.TrimSpace(d.Tool) != "bi_dashboard" {
+		return
+	}
+	if d.Arguments == nil {
+		d.Arguments = FlexibleMap{}
+	}
+	if strings.TrimSpace(argString(d.Arguments["action"])) != "" {
+		return
+	}
+	d.Arguments["action"] = inferDashboardAction(d)
+}
+
+func inferDashboardAction(d *Decision) string {
+	if d != nil && d.Arguments != nil {
+		if argString(d.Arguments["name"]) != "" || argPresent(d.Arguments["rows"]) || argPresent(d.Arguments["metrics"]) {
+			return "create"
+		}
+	}
+	blob := ""
+	if d != nil {
+		blob = strings.ToLower(strings.TrimSpace(d.Objective + "\n" + d.Reason))
+	}
+	switch {
+	case strings.Contains(blob, "action create"), strings.Contains(blob, "action=create"), strings.HasPrefix(blob, "create"), strings.HasPrefix(blob, "publish"):
+		return "create"
+	case strings.Contains(blob, "action query"), strings.Contains(blob, "action=query"), strings.HasPrefix(blob, "query"), strings.HasPrefix(blob, "read"):
+		return "query"
+	case strings.Contains(blob, "list"):
+		return "list"
+	case strings.Contains(blob, "create"), strings.Contains(blob, "publish"):
+		return "create"
+	default:
+		return "query"
+	}
+}
+
+func argPresent(v any) bool {
+	switch typed := v.(type) {
+	case nil:
+		return false
+	case []any:
+		return len(typed) > 0
+	case []map[string]any:
+		return len(typed) > 0
+	default:
+		return strings.TrimSpace(argString(v)) != ""
+	}
 }
 
 func retryInvalidDecision(err error, attempt int) bool {
@@ -171,16 +223,17 @@ func (e *Engine) systemPrompt() string {
 	b.WriteString("Loop: Goal → Understand → Decide → Act → Observe → Reflection → Decide / Finish.\n")
 	b.WriteString("After a tool observation, a Reflection Engine judges whether the goal is met, evidence is enough, and what to do next (CONTINUE, REPLAN, FINISH, ASK_USER). Use the latest reflection when deciding.\n")
 	b.WriteString("Output a single structured Decision that matches the JSON Schema.\n")
-	b.WriteString("Default reply language is Chinese. Write thought, reason, objective, and any dashboard title or summary in Chinese. Copy table column names and cell values exactly from the query; those stored fields stay English. Do not translate campaign names, channel names, or column keys.\n")
-	b.WriteString("thought is 2 to 4 first-person sentences about what you noticed and why the next action follows. reason is one short Chinese line. Do not add a hidden scratchpad outside thought, and do not put a tool result in thought.\n")
+	b.WriteString("You must reply in English. Write thought, reason, objective, and any dashboard title or summary in English only. Do not answer in Chinese even if the user wrote in Chinese. Copy table column names and cell values exactly from the query. Do not translate campaign names, channel names, or column keys.\n")
+	b.WriteString("thought is 2 to 4 first-person English sentences about what you noticed and why the next action follows. reason is one short English line. Do not add a hidden scratchpad outside thought, and do not put a tool result in thought.\n")
 	b.WriteString("Only fill type, thought, reason, objective, tool, arguments, expected_result, confidence, and risk.\n")
 	b.WriteString("Never fabricate a tool result. CALL_TOOL means a tool should be executed later; expected_result is a prediction, not an observation.\n")
 	b.WriteString("CALL_TOOL only for tools listed in available_tools. arguments must be a JSON object (for example {\"nl\":\"...\"}), never a stringified JSON string, and may be omitted or null when unused.\n")
+	b.WriteString("bi_dashboard arguments are required. Read rows with {\"action\":\"query\"}. Publish with {\"action\":\"create\",\"name\":\"...\",\"summary\":\"...\",\"metrics\":[{\"label\":\"Spend\",\"value\":\"1.00\"}],\"columns\":[\"channel\"],\"rows\":[{\"channel\":\"Meta\"}]}. Do not call bi_dashboard with empty arguments.\n")
 	b.WriteString("If available_agents is non-empty, you are the Coordinator. Assign work with DELEGATE_AGENT and arguments {\"agent\":\"analyst|researcher|reviewer\",\"task\":\"...\"}. Example: {\"agent\":\"analyst\",\"task\":\"Analyze why Meta ROAS declined yesterday\"}. Do not fabricate specialist results.\n")
 	b.WriteString("After Analyst or Researcher returns, DELEGATE_AGENT to reviewer to verify conclusions and evidence. If the reviewer returns {\"approved\":false,\"reason\":\"insufficient evidence\"} (or any approved=false), do not FINISH that conclusion; the runtime will REPLAN and you must re-execute.\n")
 	b.WriteString("If available_agents is empty, never use DELEGATE_AGENT.\n")
 	b.WriteString("Use search_memory to recall user preferences, business knowledge, historical insights, and query patterns. Use save_memory to persist them. Never store API keys or credentials.\n")
-	b.WriteString("When the user asks to build, create, or update a BI dashboard or 看板, do not create it on the first step and do not delegate it away. First CALL_TOOL bi_dashboard with action query and read the ads totals and campaign rows. After that observation, decide yourself which KPIs, channels, and campaigns the numbers support, and what conclusion they justify. Then CALL_TOOL bi_dashboard with action create. Copy metric values and table rows from the query observation, keeping English column keys and English campaign values. summary is a Chinese conclusion naming a channel or campaign and what stands out. Never send placeholder values such as \"-\" or an empty rows array. Do not invent a dashboard id; the tool returns the url.\n")
+	b.WriteString("When the user asks to build, create, or update a BI dashboard, do not create it on the first step and do not delegate it away. First CALL_TOOL bi_dashboard with action query and read the ads totals and campaign rows. After that observation, decide yourself which KPIs, channels, and campaigns the numbers support, and what conclusion they justify. Then CALL_TOOL bi_dashboard with action create. Copy metric values and table rows from the query observation, keeping English column keys and English campaign values. summary is an English conclusion naming a channel or campaign and what stands out. Never send placeholder values such as \"-\" or an empty rows array. Do not invent a dashboard id; the tool returns the url.\n")
 	b.WriteString("JSON Schema:\n")
 	b.WriteString(e.schemaJSON)
 	return b.String()

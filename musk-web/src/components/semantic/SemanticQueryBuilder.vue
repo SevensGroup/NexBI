@@ -21,7 +21,7 @@ defineExpose({ query })
 </script>
 
 <template>
-  <div class="space-y-3 text-sm">
+  <div class="space-y-3 rounded-xl border border-line bg-panel p-4 text-sm">
     <div>
       <div class="mb-1 text-xs text-mute">Metrics</div>
       <div class="flex flex-wrap gap-2">
@@ -42,14 +42,14 @@ defineExpose({ query })
     </div>
     <div class="flex flex-wrap gap-3">
       <label class="text-xs">Filter channel
-        <select v-model="channel" class="ml-1 rounded border border-line bg-canvas px-2 py-1">
+        <select v-model="channel" class="ml-1 rounded-lg border border-line bg-canvas px-2 py-1">
           <option>Meta</option>
           <option>Google</option>
           <option>TikTok</option>
         </select>
       </label>
-      <label class="text-xs">Start <input v-model="start" class="ml-1 rounded border border-line bg-canvas px-2 py-1" type="date" /></label>
-      <label class="text-xs">End <input v-model="end" class="ml-1 rounded border border-line bg-canvas px-2 py-1" type="date" /></label>
+      <label class="text-xs">Start <input v-model="start" class="ml-1 rounded-lg border border-line bg-canvas px-2 py-1" type="date" /></label>
+      <label class="text-xs">End <input v-model="end" class="ml-1 rounded-lg border border-line bg-canvas px-2 py-1" type="date" /></label>
     </div>
   </div>
 </template>

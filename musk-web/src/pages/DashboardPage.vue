@@ -14,14 +14,16 @@ const run = useAgentRunStore()
 const loading = ref(true)
 const error = ref<string | null>(null)
 const starting = ref(false)
-const goal = ref(DEFAULT_GOAL)
+const suggestions = [
+  'Build me an advertising data board',
+  'Compare spend, revenue, and ROAS by channel',
+  'Find campaigns with high spend and low return',
+]
+const goal = ref(suggestions[0])
 const stats = ref(MOCK_DASHBOARD)
 const mock = isMockMode()
-const biWeb = (import.meta.env.VITE_BI_WEB_URL || 'http://localhost:5174').replace(/\/$/, '')
 
-const liveHint = computed(() =>
-  mock ? 'Mock replay' : 'Live musk-back · POST /api/v1/agent/run { message }',
-)
+const liveHint = computed(() => (mock ? 'Mock replay' : 'Backend connected'))
 
 onMounted(() => {
   loading.value = false
@@ -43,74 +45,110 @@ async function startFromDashboard(): Promise<void> {
 </script>
 
 <template>
-  <div class="h-full overflow-auto p-6">
-    <h1 class="text-lg font-medium">Dashboard</h1>
-    <p class="mt-1 text-sm text-mute">Autonomous Agent Operating Console · {{ liveHint }}</p>
-    <p class="mt-3 max-w-3xl text-xs text-mute">
-      说「做一个昨日消耗看板，列出渠道和花费」，Agent 会把看板写到 {{ biWeb }}（演示账号 demo@sevens.local）。
-    </p>
-    <form class="mt-4 flex max-w-3xl items-end gap-2" @submit.prevent="startFromDashboard">
-      <label class="flex-1 text-xs text-mute">
-        Goal
-        <textarea
-          v-model="goal"
-          rows="2"
-          class="mt-1 w-full resize-none rounded border border-line bg-canvas px-3 py-2 text-sm text-ink"
-          data-testid="dashboard-goal"
-        />
-      </label>
-      <button
-        data-testid="dashboard-run"
-        class="h-10 rounded bg-accent px-4 text-sm text-white disabled:opacity-40"
-        type="submit"
-        :disabled="starting"
-      >
-        {{ starting ? 'Running…' : 'Run' }}
-      </button>
-    </form>
-    <p v-if="run.state.runId" class="mt-2 font-mono text-[11px] text-mute">
-      last run {{ run.state.runId }} · {{ run.state.status }}
-    </p>
-    <PageState :loading="loading" :error="error">
-      <div v-if="mock" class="mt-6 grid gap-3 md:grid-cols-4 lg:grid-cols-7">
-        <MetricCard label="Active Agents" :value="stats.activeAgents" />
-        <MetricCard label="Completed Today" :value="stats.completedToday" />
-        <MetricCard label="Success Rate" :value="formatPct(stats.successRate, 0)" />
-        <MetricCard label="Avg Runtime" :value="formatDuration(stats.averageRuntimeMs)" />
-        <MetricCard label="LLM Calls" :value="stats.llmCalls" />
-        <MetricCard label="Tokens" :value="stats.tokens.toLocaleString()" />
-        <MetricCard label="Cost" :value="formatUsd(stats.costUsd)" />
-      </div>
-      <div v-else class="mt-6 text-sm text-mute">
-        Live run metrics come from GET /api/v1/runs/:id (tokens / cost on the persisted run). musk-back has no run-list endpoint yet.
-      </div>
-      <h2 class="mt-8 text-sm uppercase tracking-wide text-mute">Recent Runs</h2>
-      <table v-if="mock || run.history.length" class="mt-2 w-full text-left text-sm">
-        <thead class="text-xs text-mute">
-          <tr>
-            <th class="py-2">Run</th>
-            <th>Goal</th>
-            <th>Status</th>
-            <th v-if="mock">Steps</th>
-            <th v-if="mock">Cost</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="r in mock ? MOCK_RUNS : run.history"
-            :key="r.id"
-            class="cursor-pointer border-t border-line hover:bg-raised"
-            @click="router.push(`/runs/${r.id}`)"
-          >
-            <td class="py-2 font-mono text-xs">{{ r.id }}</td>
-            <td class="max-w-md truncate">{{ r.goal }}</td>
-            <td>{{ r.status }}</td>
-            <td v-if="mock">{{ r.steps }}</td>
-            <td v-if="mock">{{ formatUsd(r.costUsd) }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p v-else class="mt-2 text-sm text-mute">Submit a goal to start a live run. The console will open /runs/&lt;uuid&gt; from musk-back, not a sample id.</p>
-    </PageState>
+  <div class="h-full overflow-auto">
+    <div class="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-8">
+      <header>
+        <h1 class="text-xl font-semibold tracking-tight">Dashboard</h1>
+        <p class="mt-1 text-sm text-mute">Start a run from one sentence. {{ liveHint }}.</p>
+      </header>
+
+      <section>
+        <div class="mb-3">
+          <h2 class="text-sm font-medium">Goal</h2>
+          <p class="mt-0.5 text-xs leading-5 text-mute">The agent queries the data, then writes a board.</p>
+        </div>
+        <form class="overflow-hidden rounded-xl border border-line bg-panel p-4" @submit.prevent="startFromDashboard">
+          <label class="text-sm" for="dashboard-goal">What should we look at?</label>
+          <textarea
+            id="dashboard-goal"
+            v-model="goal"
+            rows="3"
+            class="mt-3 w-full resize-none rounded-xl border border-line bg-canvas px-4 py-3 text-sm leading-6 text-ink outline-none focus:border-accent"
+            data-testid="dashboard-goal"
+          />
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button
+              v-for="item in suggestions"
+              :key="item"
+              class="rounded-full border border-line bg-raised px-3 py-1 text-xs text-mute hover:text-ink"
+              type="button"
+              @click="goal = item"
+            >
+              {{ item }}
+            </button>
+          </div>
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+            <p class="max-w-xl text-xs leading-5 text-mute">
+              The default goal is “Build me an advertising data board”. The finished board opens at /bi/&lt;code&gt; in this app.
+            </p>
+            <button
+              data-testid="dashboard-run"
+              class="h-10 rounded-xl bg-accent px-5 text-sm font-medium text-white disabled:opacity-40"
+              type="submit"
+              :disabled="starting"
+            >
+              {{ starting ? 'Running…' : 'Run' }}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <p v-if="run.state.runId" class="font-mono text-xs text-mute">
+        Last run {{ run.state.runId }} · {{ run.state.status }}
+      </p>
+
+      <PageState :loading="loading" :error="error">
+        <section v-if="mock">
+          <div class="mb-3">
+            <h2 class="text-sm font-medium">Today</h2>
+            <p class="mt-0.5 text-xs leading-5 text-mute">Sample counters from the mock catalog.</p>
+          </div>
+          <div class="grid gap-3 md:grid-cols-4 lg:grid-cols-7">
+            <MetricCard label="Active Agents" :value="stats.activeAgents" />
+            <MetricCard label="Completed Today" :value="stats.completedToday" />
+            <MetricCard label="Success Rate" :value="formatPct(stats.successRate, 0)" />
+            <MetricCard label="Avg Runtime" :value="formatDuration(stats.averageRuntimeMs)" />
+            <MetricCard label="LLM Calls" :value="stats.llmCalls" />
+            <MetricCard label="Tokens" :value="stats.tokens.toLocaleString()" />
+            <MetricCard label="Cost" :value="formatUsd(stats.costUsd)" />
+          </div>
+        </section>
+
+        <section>
+          <div class="mb-3">
+            <h2 class="text-sm font-medium">Recent runs</h2>
+            <p class="mt-0.5 text-xs leading-5 text-mute">Open a row to replay the timeline.</p>
+          </div>
+          <div class="overflow-hidden rounded-xl border border-line bg-panel">
+            <table v-if="mock || run.history.length" class="w-full text-left text-sm">
+              <thead class="text-xs text-mute">
+                <tr>
+                  <th class="px-4 py-3 font-medium">Run</th>
+                  <th class="px-4 py-3 font-medium">Goal</th>
+                  <th class="px-4 py-3 font-medium">Status</th>
+                  <th v-if="mock" class="px-4 py-3 font-medium">Steps</th>
+                  <th v-if="mock" class="px-4 py-3 font-medium">Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="r in mock ? MOCK_RUNS : run.history"
+                  :key="r.id"
+                  class="cursor-pointer border-t border-line hover:bg-raised"
+                  @click="router.push(`/runs/${r.id}`)"
+                >
+                  <td class="px-4 py-3.5 font-mono text-xs">{{ r.id }}</td>
+                  <td class="max-w-md truncate px-4 py-3.5">{{ r.goal }}</td>
+                  <td class="px-4 py-3.5">{{ r.status }}</td>
+                  <td v-if="mock" class="px-4 py-3.5">{{ r.steps }}</td>
+                  <td v-if="mock" class="px-4 py-3.5">{{ formatUsd(r.costUsd) }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-else class="px-4 py-6 text-sm leading-6 text-mute">Submit a goal to start. The run detail page opens when it is created.</p>
+          </div>
+        </section>
+      </PageState>
+    </div>
   </div>
 </template>

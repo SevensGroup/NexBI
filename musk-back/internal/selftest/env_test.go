@@ -9,7 +9,7 @@ import (
 func TestLoadDotEnvParsesLLMKeysWithoutRequiringLiveNetwork(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".env")
-	content := "LLM_BASE_URL=https://api.siliconflow.cn/v1\nLLM_API_KEY=sk-test-not-real\nLLM_MODEL=deepseek-ai/DeepSeek-V4-Pro\n"
+	content := "LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai\nLLM_API_KEY=sk-test-not-real\nLLM_MODEL=gemini-3.5-flash\n"
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestLoadDotEnvParsesLLMKeysWithoutRequiringLiveNetwork(t *testing.T) {
 func TestLoadDotEnvIgnoresComments(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".env")
-	if err := os.WriteFile(path, []byte("# secret\nLLM_MODEL=deepseek-ai/DeepSeek-V4-Pro\n"), 0o600); err != nil {
+	if err := os.WriteFile(path, []byte("# secret\nLLM_MODEL=gemini-3.5-flash\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	m, err := LoadDotEnv(path)

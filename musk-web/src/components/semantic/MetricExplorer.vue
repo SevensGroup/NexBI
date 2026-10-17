@@ -6,12 +6,12 @@ const emit = defineEmits<{ select: [key: string] }>()
 </script>
 
 <template>
-  <div class="grid gap-2 md:grid-cols-2">
+  <div class="grid gap-3 md:grid-cols-2">
     <button
       v-for="m in metrics"
       :key="m.key"
       type="button"
-      class="rounded border border-line bg-panel p-3 text-left text-sm hover:border-accent/40"
+      class="rounded-xl border border-line bg-panel p-4 text-left text-sm hover:border-accent/40"
       @click="emit('select', m.key)"
     >
       <div class="font-medium">{{ m.name }}</div>

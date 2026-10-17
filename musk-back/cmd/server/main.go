@@ -59,7 +59,7 @@ func run(configPath string) error {
 	}
 	defer rt.Close()
 
-	srv := api.NewServer(cfg.Server, rt, log, cfg.Resilience)
+	srv := api.NewServer(cfg.Server, rt, log, rt.Boards(), cfg.Resilience)
 
 	errCh := make(chan error, 1)
 	go func() {

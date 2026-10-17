@@ -5,6 +5,7 @@ test.describe('console live mode (no extra LLM)', () => {
     const health = await request.get('http://127.0.0.1:8080/health')
     expect(health.ok(), 'start musk-back with musk-back/.env (cd musk-back && make run)').toBeTruthy()
 
+    await page.addInitScript(() => localStorage.setItem('musk-demo-session', '1'))
     await page.goto('/dashboard')
     await expect(page.getByTestId('backend-connection')).toHaveText('Connected', { timeout: 20_000 })
     await expect(page.getByTestId('backend-connection')).not.toHaveText('Disconnected')
@@ -18,6 +19,7 @@ test.describe('console live mode (no extra LLM)', () => {
     const health = await request.get('http://127.0.0.1:8080/health')
     expect(health.ok(), 'start musk-back with musk-back/.env').toBeTruthy()
 
+    await page.addInitScript(() => localStorage.setItem('musk-demo-session', '1'))
     await page.goto('/runs/run-ads-01')
     await expect(page.getByTestId('backend-connection')).toHaveText('Connected', { timeout: 20_000 })
     await expect(page.getByTestId('sample-catalog-hint')).toBeVisible()

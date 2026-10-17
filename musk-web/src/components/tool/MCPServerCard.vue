@@ -6,7 +6,7 @@ defineProps<{ server: MCPServer }>()
 </script>
 
 <template>
-  <div class="rounded border border-line bg-panel p-3">
+  <div class="rounded-xl border border-line bg-panel p-4">
     <div class="flex items-center justify-between">
       <div class="font-medium">{{ server.name }}</div>
       <MCPHealthBadge :health="server.health" />

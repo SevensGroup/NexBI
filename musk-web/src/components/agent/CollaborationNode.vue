@@ -7,7 +7,7 @@ defineProps<{ data: { agent: AgentInfo } }>()
 </script>
 
 <template>
-  <div class="w-[220px] rounded border border-line bg-panel px-3 py-2 shadow">
+  <div class="w-[220px] rounded-xl border border-line bg-panel px-3 py-2 shadow">
     <Handle type="target" :position="Position.Top" />
     <div class="flex items-center justify-between">
       <strong class="text-sm">{{ data.agent.name }}</strong>

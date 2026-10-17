@@ -413,6 +413,71 @@ func TestDecideInvalidAfterRetry(t *testing.T) {
 	}
 }
 
+func TestForgetAllowsRetryOfFailedCall(t *testing.T) {
+	state := NewState("Build me an advertising data board", 8)
+	p := NewPolicy()
+	d := &Decision{
+		Type:       DecisionCallTool,
+		Tool:       "bi_dashboard",
+		Reason:     "query rows",
+		Objective:  "Query advertising data rows using bi_dashboard.",
+		Arguments:  map[string]any{"action": "query"},
+		Confidence: 0.9,
+	}
+	p.Apply(state, d)
+	if err := p.CheckDuplicate(state, d); !errors.Is(err, ErrDuplicateAction) {
+		t.Fatalf("err = %v", err)
+	}
+	state.Forget(d)
+	if err := p.CheckDuplicate(state, d); err != nil {
+		t.Fatalf("forgotten failure should be retryable: %v", err)
+	}
+}
+
+func TestPrepareDashboardCallDefaultsToQuery(t *testing.T) {
+	d := &Decision{
+		Type:      DecisionCallTool,
+		Tool:      "bi_dashboard",
+		Reason:    "read the ads table",
+		Objective: "Query advertising performance rows using bi_dashboard",
+		Thought:   "I will create the board after this query.",
+	}
+	prepareDashboardCall(d)
+	if got := argString(d.Arguments["action"]); got != "query" {
+		t.Fatalf("action = %q", got)
+	}
+}
+
+func TestFailedToolCallDoesNotBlockRetry(t *testing.T) {
+	state := NewState("Build me an advertising data board", 8)
+	p := NewPolicy()
+	first := &Decision{
+		Type:       DecisionCallTool,
+		Tool:       "bi_dashboard",
+		Reason:     "read rows",
+		Objective:  "Query advertising performance rows using bi_dashboard",
+		Confidence: 0.9,
+	}
+	p.Apply(state, first)
+	state.ToolCalls[0].Success = false
+	state.ClearActionHistory()
+
+	retry := &Decision{
+		Type:       DecisionCallTool,
+		Tool:       "bi_dashboard",
+		Reason:     "read rows again",
+		Objective:  "Query advertising data rows using bi_dashboard with action query.",
+		Confidence: 0.9,
+	}
+	if err := p.CheckDuplicate(state, retry); err != nil {
+		t.Fatalf("failed query should be retryable: %v", err)
+	}
+	state.ToolCalls[0].Success = true
+	if err := p.CheckDuplicate(state, retry); !errors.Is(err, ErrDuplicateAction) {
+		t.Fatalf("successful query should still block a repeat: %v", err)
+	}
+}
+
 func TestClearActionHistoryAllowsRedelegate(t *testing.T) {
 	state := NewState("goal", 8)
 	p := NewPolicy()

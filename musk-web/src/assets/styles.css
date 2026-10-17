@@ -143,6 +143,34 @@ body,
   background: #12151b;
 }
 
+.vue-flow__controls {
+  border: 1px solid #2a303b;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.vue-flow__controls-button {
+  background: #181c24;
+  border-bottom-color: #2a303b;
+  fill: #e8eaee;
+}
+
+.vue-flow__controls-button:hover {
+  background: #222833;
+}
+
+.vue-flow__minimap {
+  background: #181c24;
+  border: 1px solid #2a303b;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.vue-flow__minimap-mask {
+  fill: rgb(11 13 17 / 0.55);
+}
+
 .el-drawer {
   background: #12151b !important;
   color: #e8eaee;

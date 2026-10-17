@@ -1,8 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { isAuthed } from '@/auth/session'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/login', name: 'login', component: () => import('@/pages/LoginPage.vue'), meta: { public: true } },
+    { path: '/bi/:code', name: 'board', component: () => import('@/pages/BoardPage.vue'), meta: { public: true } },
     { path: '/', redirect: '/dashboard' },
     { path: '/dashboard', name: 'dashboard', component: () => import('@/pages/DashboardPage.vue') },
     { path: '/agents', name: 'agents', component: () => import('@/pages/AgentsPage.vue') },
@@ -21,6 +24,15 @@ const router = createRouter({
     { path: '/approvals', name: 'approvals', component: () => import('@/pages/ApprovalsPage.vue') },
     { path: '/settings', name: 'settings', component: () => import('@/pages/SettingsPage.vue') },
   ],
+})
+
+router.beforeEach((to) => {
+  if (to.meta.public) {
+    if (to.name === 'login' && isAuthed()) return { path: '/dashboard' }
+    return true
+  }
+  if (!isAuthed()) return { name: 'login', query: { redirect: to.fullPath } }
+  return true
 })
 
 export default router

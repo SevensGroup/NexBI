@@ -13,7 +13,7 @@ async function copy(): Promise<void> {
 </script>
 
 <template>
-  <div class="relative rounded border border-line bg-canvas">
+  <div class="relative overflow-hidden rounded-xl border border-line bg-canvas">
     <button class="absolute right-2 top-2 text-[11px] text-mute hover:text-ink" type="button" @click="copy">
       Copy JSON
     </button>

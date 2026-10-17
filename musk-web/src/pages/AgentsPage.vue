@@ -62,36 +62,41 @@ function goWorkspace(id: string): void {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col p-4">
-    <div class="mb-3 flex items-center justify-between">
-      <div>
-        <h1 class="text-lg font-medium">Agent Center</h1>
-        <p class="text-xs text-mute">Coordinator delegates to Analyst, Researcher, Reviewer</p>
-      </div>
-      <button class="rounded bg-accent px-3 py-1.5 text-xs text-white" type="button" @click="router.push('/agents/advertising-analyst')">
+  <div class="flex h-full min-h-0 flex-col">
+    <div class="flex items-end justify-between gap-4 px-6 pb-4 pt-6">
+      <header>
+        <h1 class="text-xl font-semibold tracking-tight">Agents</h1>
+        <p class="mt-1 text-sm text-mute">Coordinator delegates to Analyst, Researcher, and Reviewer.</p>
+      </header>
+      <button class="h-9 shrink-0 rounded-xl bg-accent px-4 text-sm font-medium text-white" type="button" @click="router.push('/agents/advertising-analyst')">
         Advertising Analyst
       </button>
     </div>
-    <div v-if="error" class="text-sm text-rose-400">{{ error }}</div>
-    <div v-else class="grid min-h-0 flex-1 grid-cols-12 gap-3">
+    <div v-if="error" class="px-6 text-sm text-rose-300">{{ error }}</div>
+    <div v-else class="grid min-h-0 flex-1 grid-cols-12 gap-4 px-6 pb-6">
       <div class="col-span-8 min-h-0">
         <AgentGraph :agents="liveAgents" @select="open" />
       </div>
-      <div class="col-span-4 min-h-0 space-y-2 overflow-auto">
+      <div class="col-span-4 min-h-0 space-y-3 overflow-auto">
         <AgentCard v-for="a in liveAgents" :key="a.id" :agent="a" @click="goWorkspace" />
-        <div class="rounded border border-line bg-panel p-3">
-          <div class="mb-2 text-[11px] uppercase text-mute">Collaboration Timeline</div>
-          <div v-if="!run.state.collaborations.length" class="text-xs text-mute">No delegations yet.</div>
-          <ol class="space-y-1 text-xs">
-            <li v-for="(c, i) in run.state.collaborations" :key="i" class="flex justify-between gap-2">
-              <span>{{ c.from }} → {{ c.to }} · {{ c.task }} · {{ c.status }}</span>
-              <span class="text-mute">{{ formatTime(c.timestamp) }}</span>
-            </li>
-          </ol>
-        </div>
-        <div class="flex items-center gap-2 text-xs text-mute">
+        <section class="overflow-hidden rounded-xl border border-line bg-panel">
+          <div class="border-b border-line px-4 py-3">
+            <h2 class="text-sm font-medium">Collaboration</h2>
+            <p class="mt-0.5 text-xs text-mute">Delegations on the current run.</p>
+          </div>
+          <p v-if="!run.state.collaborations.length" class="px-4 py-4 text-sm text-mute">No delegations yet.</p>
+          <div
+            v-for="(c, i) in run.state.collaborations"
+            :key="i"
+            class="flex items-start justify-between gap-4 border-t border-line px-4 py-3 text-sm first:border-t-0"
+          >
+            <p class="min-w-0">{{ c.from }} → {{ c.to }} · {{ c.task }}</p>
+            <p class="shrink-0 text-right text-xs text-mute">{{ c.status }}<br />{{ formatTime(c.timestamp) }}</p>
+          </div>
+        </section>
+        <div class="flex items-center gap-2 px-1 text-xs text-mute">
           <AgentStateBadge :status="run.state.status" live />
-          <span>live run</span>
+          <span>Live run</span>
         </div>
       </div>
     </div>

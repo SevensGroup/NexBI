@@ -72,11 +72,19 @@ async function reject(id: string): Promise<void> {
 </script>
 
 <template>
-  <div class="h-full overflow-auto p-6">
-    <h1 class="text-lg font-medium">Approvals</h1>
-    <p class="text-sm text-mute">HIGH / CRITICAL actions pause the agent until a human decides.</p>
-    <div class="mt-4">
-      <ApprovalCenter :items="items" :loading="loading" :error="error" @approve="approve" @reject="reject" @open="open" />
+  <div class="h-full overflow-auto">
+    <div class="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-8">
+      <header>
+        <h1 class="text-xl font-semibold tracking-tight">Approvals</h1>
+        <p class="mt-1 text-sm text-mute">High and critical actions pause the agent until someone decides.</p>
+      </header>
+      <section>
+        <div class="mb-3">
+          <h2 class="text-sm font-medium">Queue</h2>
+          <p class="mt-0.5 text-xs leading-5 text-mute">Approve to continue the run, or reject to stop that action.</p>
+        </div>
+        <ApprovalCenter :items="items" :loading="loading" :error="error" @approve="approve" @reject="reject" @open="open" />
+      </section>
     </div>
     <ApprovalDetailDrawer v-model="drawer" :approval="current" @approve="approve" @reject="reject" />
   </div>

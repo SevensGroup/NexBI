@@ -4,6 +4,7 @@ import type { Decision, RiskLevel } from '@/types/decision'
 import type { Reflection } from '@/types/reflection'
 import type { Observation, ToolCall } from '@/types/tool'
 import type { Anomaly, Recommendation, Report, RootCause } from '@/types/report'
+import { presentRunError } from '@/utils/runDisplay'
 
 const TERMINAL = new Set(['COMPLETED', 'FAILED', 'ABORTED', 'WAITING_APPROVAL'])
 
@@ -94,7 +95,7 @@ export function eventsFromBackendDelta(
   }
   if (becameTerminal && (next.status === 'FAILED' || next.status === 'ABORTED')) {
     push('agent.failed', next.steps?.length ?? 1, next.updated_at, {
-      error: next.error || next.status,
+      error: presentRunError(next.error) || next.status,
     })
   }
 
@@ -108,16 +109,31 @@ export function eventsFromBackendDelta(
 }
 
 export function boardLink(run: BackendRun): string {
-  const raw = run.answer || run.final_result || ''
+  const blobs: string[] = []
+  if (run.answer) blobs.push(run.answer)
+  if (run.final_result) blobs.push(run.final_result)
+  for (const call of run.tool_calls ?? []) {
+    const result = call.result
+    if (typeof result === 'string') blobs.push(result)
+    else if (result != null) blobs.push(JSON.stringify(result))
+  }
+  for (const blob of blobs) {
+    const hit = linkFromText(blob)
+    if (hit) return hit
+  }
+  return ''
+}
+
+function linkFromText(raw: string): string {
+  const matched = raw.match(/https?:\/\/[^\s"'<>]+\/bi\/[a-z0-9]+/i)
+  if (matched) return matched[0]
   const parsed = tryParseJson(raw)
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return ''
   const row = parsed as Record<string, unknown>
-  if (typeof row.url === 'string' && /^https?:\/\//.test(row.url)) return row.url
-  const id = row.id
-  const origin = String(import.meta.env.VITE_BI_WEB_URL || 'http://localhost:5174').replace(/\/$/, '')
-  if (typeof id === 'number' && id > 0) return `${origin}/board/${id}`
-  if (typeof id === 'string' && /^\d+$/.test(id)) return `${origin}/board/${id}`
-  return ''
+  const code = typeof row.code === 'string' ? row.code.trim() : ''
+  if (!/^[a-z0-9]{6,32}$/i.test(code)) return ''
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'
+  return `${origin.replace(/\/$/, '')}/bi/${code}`
 }
 
 export function reportFromRun(run: BackendRun): Report | null {

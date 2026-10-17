@@ -123,17 +123,17 @@ func ProbeSiliconFlow(client *http.Client, env LLMEnv) error {
 	req.Header.Set("Authorization", "Bearer "+env.APIKey)
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("SiliconFlow GET /models: %w", err)
+		return fmt.Errorf("LLM GET /models: %w", err)
 	}
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
-		return fmt.Errorf("SiliconFlow rejected LLM_API_KEY (HTTP %d). Check musk-back/.env", resp.StatusCode)
+		return fmt.Errorf("LLM provider rejected LLM_API_KEY (HTTP %d). Check musk-back/.env", resp.StatusCode)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("SiliconFlow GET /models HTTP %d", resp.StatusCode)
+		return fmt.Errorf("LLM GET /models HTTP %d", resp.StatusCode)
 	}
-	if !bytes.Contains(bytes.ToLower(raw), []byte("deepseek")) && !bytes.Contains(raw, []byte(env.Model)) {
+	if !bytes.Contains(bytes.ToLower(raw), []byte("gemini")) && !bytes.Contains(raw, []byte(env.Model)) {
 		// Provider may not list every model; a 2xx still proves the key talks to this host.
 		return nil
 	}

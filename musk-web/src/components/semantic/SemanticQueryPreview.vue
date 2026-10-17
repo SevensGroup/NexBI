@@ -6,7 +6,7 @@ defineProps<{ query: unknown }>()
 
 <template>
   <div>
-    <div class="mb-1 text-[11px] uppercase text-mute">Semantic Query</div>
+    <div class="mb-2 text-sm font-medium">Semantic query</div>
     <JsonViewer :value="query" />
   </div>
 </template>

@@ -10,6 +10,7 @@ import type { AgentInfo } from '@/types/agent'
 import type { SemanticDimension, SemanticMetric } from '@/types/semantic'
 import { eventsFromBackendDelta, eventsFromBackendRun } from './mapRun'
 import { isAxiosError } from 'axios'
+import { presentRunError } from '@/utils/runDisplay'
 
 export const RUN_POST_TIMEOUT_MS = 600_000
 
@@ -37,10 +38,10 @@ export function newRunId(): string {
 export function extractApiError(err: unknown): string {
   if (isAxiosError(err)) {
     const data = err.response?.data as { error?: string } | undefined
-    if (typeof data?.error === 'string' && data.error.trim()) return data.error.trim()
-    if (err.message) return err.message
+    if (typeof data?.error === 'string' && data.error.trim()) return presentRunError(data.error.trim())
+    if (err.message) return presentRunError(err.message)
   }
-  return err instanceof Error ? err.message : String(err)
+  return presentRunError(err instanceof Error ? err.message : String(err))
 }
 
 export function runRequestBody(message: string): { message: string } {

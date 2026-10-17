@@ -1,64 +1,40 @@
 package bi
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"strings"
-	"time"
 
+	"autonomous-agent/internal/board"
 	"autonomous-agent/internal/tools"
 )
 
 const toolName = "bi_dashboard"
 
-// Config points the tool at the BI server agent API.
-type Config struct {
-	BaseURL string
-	Token   string
-}
-
-// ConfigFromEnv reads BI_API_BASE_URL and BI_AGENT_TOKEN, with local defaults.
-func ConfigFromEnv() Config {
-	base := strings.TrimRight(strings.TrimSpace(os.Getenv("BI_API_BASE_URL")), "/")
-	if base == "" {
-		base = "http://127.0.0.1:8081"
-	}
-	token := strings.TrimSpace(os.Getenv("BI_AGENT_TOKEN"))
-	if token == "" {
-		token = "dev-bi-agent"
-	}
-	return Config{BaseURL: base, Token: token}
-}
-
-// Tool creates and lists dashboards in the Sevens BI app.
+// Tool publishes dashboards in this process. The console opens them at /bi/<code>.
 type Tool struct {
-	cfg    Config
-	client *http.Client
+	boards *board.Store
 }
 
-func New(cfg Config) *Tool {
-	return &Tool{
-		cfg:    cfg,
-		client: &http.Client{Timeout: 20 * time.Second},
+func New(boards *board.Store) *Tool {
+	return &Tool{boards: boards}
+}
+
+func Register(reg tools.Registry, boards *board.Store) error {
+	if boards == nil {
+		boards = board.New("")
 	}
-}
-
-func Register(reg tools.Registry, cfg Config) error {
-	return reg.Register(New(cfg), tools.RiskLow)
+	return reg.Register(New(boards), tools.RiskLow)
 }
 
 func (t *Tool) Name() string { return toolName }
 
 func (t *Tool) Description() string {
-	return "Read advertising rows and publish a dashboard in the Sevens BI app. " +
-		"action=query returns live totals and campaign rows from the ads table. Call it before creating a board. " +
+	return "Read advertising rows and publish a dashboard in this app. " +
+		"action=query returns totals and campaign rows. Call it before creating a board. " +
 		"action=create writes the board. name is the title, summary is your own conclusion from the query, metrics are KPI cards, columns and rows are the table. " +
-		"Copy numbers from the query result. Do not send placeholder values or an empty table. Do not invent the id; use the id and url returned by this tool."
+		"Copy numbers from the query result. Do not send placeholder values or an empty table. Do not invent the code; the tool returns url like http://localhost:5173/bi/<code>."
 }
 
 func (t *Tool) InputSchema() any {
@@ -99,7 +75,7 @@ func (t *Tool) InputSchema() any {
 }
 
 func (t *Tool) Execute(ctx context.Context, input map[string]any) (tools.ToolResult, error) {
-	if t == nil {
+	if t == nil || t.boards == nil {
 		return fail("bi dashboard tool is not configured")
 	}
 	if ctx == nil {
@@ -108,9 +84,13 @@ func (t *Tool) Execute(ctx context.Context, input map[string]any) (tools.ToolRes
 	action := strings.ToLower(strings.TrimSpace(fmt.Sprint(input["action"])))
 	switch action {
 	case "list":
-		return t.get(ctx, "/api/agent/dashboards")
+		return ok(t.boards.List()), nil
 	case "query":
-		return t.queryAds(ctx)
+		return ok(map[string]any{
+			"source": "ads",
+			"board":  t.boards.Ads(),
+			"next":   "KPI cards must copy the totals object, including clicks and impressions. Do not re-sum the rows. Keep column keys and campaign values in English exactly as returned. Write the dashboard title and summary in English, then call action=create.",
+		}), nil
 	case "create":
 		name := strings.TrimSpace(fmt.Sprint(input["name"]))
 		if name == "" || name == "<nil>" {
@@ -119,103 +99,70 @@ func (t *Tool) Execute(ctx context.Context, input map[string]any) (tools.ToolRes
 		if err := validateCreate(input); err != nil {
 			return fail(err.Error())
 		}
-		body := map[string]any{
-			"name":    name,
-			"summary": stringField(input, "summary"),
+		metrics, columns, rows := board.Normalize(metricsFrom(input["metrics"]), stringsFrom(input["columns"]), rowsFrom(input["rows"]))
+		created, err := t.boards.Create(name, stringField(input, "summary"), metrics, columns, rows)
+		if err != nil {
+			return fail(err.Error())
 		}
-		if v, ok := input["metrics"]; ok && v != nil {
-			body["metrics"] = v
-		}
-		if v, ok := input["columns"]; ok && v != nil {
-			body["columns"] = v
-		}
-		if v, ok := input["rows"]; ok && v != nil {
-			body["rows"] = v
-		}
-		return t.post(ctx, "/api/agent/dashboards", body)
+		return ok(created), nil
 	default:
 		return fail(fmt.Sprintf("unsupported action %q", action))
 	}
 }
 
-func (t *Tool) queryAds(ctx context.Context) (tools.ToolResult, error) {
-	result, err := t.get(ctx, "/api/agent/ads")
-	if err != nil || !result.Success {
-		return result, err
-	}
-	return tools.ToolResult{
-		Success: true,
-		Data: map[string]any{
-			"source": "sevens_bi.ads",
-			"board":  result.Data,
-			"next":   "KPI cards must copy the totals object, including clicks and impressions. Do not re-sum the rows. Keep column keys and campaign values in English exactly as returned. Write the dashboard title and summary in Chinese, then call action=create.",
-		},
-		Metadata: map[string]any{"tool": toolName},
-	}, nil
+func ok(data any) tools.ToolResult {
+	return tools.ToolResult{Success: true, Data: data, Metadata: map[string]any{"tool": toolName}}
 }
 
-func (t *Tool) get(ctx context.Context, path string) (tools.ToolResult, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, t.cfg.BaseURL+path, nil)
-	if err != nil {
-		return fail(err.Error())
-	}
-	return t.do(req)
-}
-
-func (t *Tool) post(ctx context.Context, path string, body any) (tools.ToolResult, error) {
-	raw, err := json.Marshal(body)
-	if err != nil {
-		return fail(err.Error())
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, t.cfg.BaseURL+path, bytes.NewReader(raw))
-	if err != nil {
-		return fail(err.Error())
-	}
-	req.Header.Set("Content-Type", "application/json")
-	return t.do(req)
-}
-
-func (t *Tool) do(req *http.Request) (tools.ToolResult, error) {
-	req.Header.Set("X-BI-Agent-Token", t.cfg.Token)
-	resp, err := t.client.Do(req)
-	if err != nil {
-		return fail(err.Error())
-	}
-	defer resp.Body.Close()
-	payload, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if err != nil {
-		return fail(err.Error())
-	}
-	var env struct {
-		Code    int             `json:"code"`
-		Msg     string          `json:"msg"`
-		Message string          `json:"message"`
-		Data    json.RawMessage `json:"data"`
-	}
-	if err := json.Unmarshal(payload, &env); err != nil {
-		return fail(fmt.Sprintf("bi api status %d: %s", resp.StatusCode, strings.TrimSpace(string(payload))))
-	}
-	if resp.StatusCode >= 300 || env.Code != 0 {
-		msg := env.Msg
-		if msg == "" {
-			msg = env.Message
+func metricsFrom(raw any) []board.Metric {
+	items, _ := raw.([]any)
+	out := make([]board.Metric, 0, len(items))
+	for _, item := range items {
+		row, ok := item.(map[string]any)
+		if !ok {
+			continue
 		}
-		if msg == "" {
-			msg = strings.TrimSpace(string(payload))
+		label := strings.TrimSpace(fmt.Sprint(row["label"]))
+		if label == "" || label == "<nil>" {
+			continue
 		}
-		return fail(msg)
+		value := ""
+		if row["value"] != nil {
+			value = strings.TrimSpace(fmt.Sprint(row["value"]))
+		}
+		out = append(out, board.Metric{Label: label, Value: value})
 	}
-	var data any
-	if len(env.Data) > 0 {
-		_ = json.Unmarshal(env.Data, &data)
+	return out
+}
+
+func stringsFrom(raw any) []string {
+	switch items := raw.(type) {
+	case []any:
+		out := make([]string, 0, len(items))
+		for _, item := range items {
+			text := strings.TrimSpace(fmt.Sprint(item))
+			if text != "" && text != "<nil>" {
+				out = append(out, text)
+			}
+		}
+		return out
+	case []string:
+		return items
+	default:
+		return nil
 	}
-	return tools.ToolResult{
-		Success: true,
-		Data:    data,
-		Metadata: map[string]any{
-			"tool": toolName,
-		},
-	}, nil
+}
+
+func rowsFrom(raw any) []map[string]any {
+	items, _ := raw.([]any)
+	out := make([]map[string]any, 0, len(items))
+	for _, item := range items {
+		row, ok := item.(map[string]any)
+		if ok {
+			out = append(out, row)
+		}
+	}
+	return out
 }
 
 type createPayload struct {

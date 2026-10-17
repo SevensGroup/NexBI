@@ -12,7 +12,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <article class="rounded border border-line bg-panel p-3 text-sm">
+  <article class="rounded-xl border border-line bg-panel p-4 text-sm">
     <div class="flex items-center justify-between gap-2">
       <button class="text-left font-medium hover:underline" type="button" @click="emit('open', approval.id)">
         {{ approval.action }}
@@ -35,8 +35,8 @@ const emit = defineEmits<{
       <ConfidenceBar :value="approval.confidence" />
     </div>
     <div v-if="approval.status === 'PENDING'" class="mt-3 flex gap-2">
-      <button class="rounded border border-line px-3 py-1 text-xs" type="button" @click="emit('reject', approval.id)">Reject</button>
-      <button class="rounded bg-accent px-3 py-1 text-xs text-white" type="button" @click="emit('approve', approval.id)">Approve</button>
+      <button class="rounded-full border border-line px-3 py-1 text-xs" type="button" @click="emit('reject', approval.id)">Reject</button>
+      <button class="rounded-full bg-accent px-3 py-1 text-xs text-white" type="button" @click="emit('approve', approval.id)">Approve</button>
     </div>
     <div v-else class="mt-2 text-[11px] uppercase text-mute">{{ approval.status }}</div>
   </article>

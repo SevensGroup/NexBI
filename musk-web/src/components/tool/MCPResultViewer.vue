@@ -6,9 +6,9 @@ defineProps<{ result: unknown; latencyMs?: number; status?: string }>()
 
 <template>
   <div>
-    <div class="mb-1 flex justify-between text-[11px] uppercase text-mute">
-      <span>Elasticsearch Result</span>
-      <span>{{ status }} · {{ latencyMs ?? 0 }}ms</span>
+    <div class="mb-2 flex items-baseline justify-between gap-3">
+      <span class="text-sm font-medium">Result</span>
+      <span class="font-mono text-xs text-mute">{{ status }} · {{ latencyMs ?? 0 }}ms</span>
     </div>
     <JsonViewer :value="result" />
   </div>

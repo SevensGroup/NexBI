@@ -41,6 +41,43 @@ func TestRetryStopsOnNonRetryable(t *testing.T) {
 	}
 }
 
+func TestRetryHonorsProviderRetryIn(t *testing.T) {
+	p := RetryPolicy{MaxAttempts: 2, Backoff: time.Hour}
+	start := time.Now()
+	n := 0
+	err := p.Do(context.Background(), func(int) error {
+		n++
+		if n == 1 {
+			return errors.New("status code: 429 Please retry in 0.05s")
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("Do: %v", err)
+	}
+	if n != 2 {
+		t.Fatalf("attempts = %d", n)
+	}
+	elapsed := time.Since(start)
+	if elapsed < 40*time.Millisecond || elapsed > 2*time.Second {
+		t.Fatalf("elapsed = %s", elapsed)
+	}
+}
+
+func TestRetrySkipsLongQuotaDelay(t *testing.T) {
+	p := RetryPolicy{MaxAttempts: 2, Backoff: 10 * time.Millisecond}
+	start := time.Now()
+	err := p.Do(context.Background(), func(int) error {
+		return errors.New("429 Please retry in 14h4m55s")
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if time.Since(start) > time.Second {
+		t.Fatalf("waited for daily quota: %s", time.Since(start))
+	}
+}
+
 func TestCircuitBreakerOpensAndRecovers(t *testing.T) {
 	b := NewCircuitBreaker(2, 30*time.Millisecond)
 	if !b.Allow() {

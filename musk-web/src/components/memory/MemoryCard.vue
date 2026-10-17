@@ -8,7 +8,7 @@ const emit = defineEmits<{ open: [id: string] }>()
 </script>
 
 <template>
-  <button type="button" class="w-full rounded border border-line bg-panel p-3 text-left text-sm hover:border-accent/40" @click="emit('open', item.id)">
+  <button type="button" class="w-full rounded-xl border border-line bg-panel p-4 text-left text-sm hover:border-accent/40" @click="emit('open', item.id)">
     <div class="flex items-center justify-between gap-2">
       <span class="font-medium">{{ item.title }}</span>
       <MemoryTypeBadge :type="item.type" />

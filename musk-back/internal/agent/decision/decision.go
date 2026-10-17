@@ -42,7 +42,7 @@ const (
 // It must not include chain-of-thought or a fabricated tool result.
 type Decision struct {
 	Type           DecisionType `json:"type" jsonschema:"required,enum=CALL_TOOL,enum=DELEGATE_AGENT,enum=REPLAN,enum=REFLECT,enum=ASK_USER,enum=FINISH,enum=ABORT" jsonschema_description:"Next action type"`
-	Thought        string       `json:"thought,omitempty" jsonschema_description:"Visible thinking in Chinese, 2 to 4 first-person sentences. What you noticed and why the next action follows. Not a tool result."`
+	Thought        string       `json:"thought,omitempty" jsonschema_description:"Visible thinking in English only, 2 to 4 first-person sentences. What you noticed and why the next action follows. Not a tool result."`
 	Reason         string       `json:"reason" jsonschema:"required" jsonschema_description:"One-line summary of the decision. No hidden scratchpad."`
 	Objective      string       `json:"objective,omitempty" jsonschema_description:"Current objective or user-facing conclusion/question"`
 	Tool           string       `json:"tool,omitempty" jsonschema_description:"Tool name when type is CALL_TOOL"`
@@ -68,6 +68,7 @@ type ToolCallRecord struct {
 	Tool      string         `json:"tool"`
 	Arguments map[string]any `json:"arguments,omitempty"`
 	Result    string         `json:"result,omitempty"`
+	Success   bool           `json:"success,omitempty"`
 }
 
 // ToolListing is a registry entry exposed to the decision engine.
@@ -244,6 +245,21 @@ func (d *Decision) fingerprint() string {
 	return string(d.Type) + "\x00" + strings.TrimSpace(d.Tool) + "\x00" + string(raw)
 }
 
+// Forget drops one recorded fingerprint so a failed tool call can be retried.
+func (s *AgentState) Forget(d *Decision) {
+	if s == nil || d == nil || len(s.executed) == 0 {
+		return
+	}
+	fp := d.fingerprint()
+	for i := len(s.executed) - 1; i >= 0; i-- {
+		if s.executed[i] != fp {
+			continue
+		}
+		s.executed = append(s.executed[:i], s.executed[i+1:]...)
+		return
+	}
+}
+
 func (s *AgentState) remember(d *Decision) {
 	if s == nil || d == nil {
 		return
@@ -351,6 +367,9 @@ func (s *AgentState) hasAction(d *Decision) bool {
 		}
 	}
 	for _, call := range s.ToolCalls {
+		if !call.Success {
+			continue
+		}
 		prev := &Decision{Type: DecisionCallTool, Tool: call.Tool, Arguments: call.Arguments}
 		if prev.fingerprint() == fp {
 			return true

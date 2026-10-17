@@ -58,7 +58,7 @@ function onNodeClick({ node }: NodeMouseEvent): void {
 </script>
 
 <template>
-  <div class="relative flex h-full min-h-[280px] flex-col rounded border border-line">
+  <div class="relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-xl border border-line">
     <VueFlow
       id="task-dag"
       class="flex-1"

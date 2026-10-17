@@ -11,10 +11,20 @@ export function isSampleCatalogMessage(message: string | null | undefined): bool
   return Boolean(message && /sample catalog/i.test(message))
 }
 
+const llmFailure =
+  /failed to create chat completion|status code:\s*429|status code:\s*401|quota exceeded|too many requests|rate limit|resource_exhausted|errorresponse|incorrect api key|invalid api key/i
+
+/** Provider failures stay one short line. The raw response stays in the server log. */
+export function presentRunError(error: string | null | undefined): string {
+  const text = error?.trim() ?? ''
+  if (!text) return ''
+  if (llmFailure.test(text)) return 'llm error'
+  return text
+}
+
 /** Red error banner: real FAILED/ABORTED only. Catalog hints never qualify. */
 export function runFailureBanner(status: string, error: string | null | undefined): string | null {
   if (isSampleCatalogMessage(error)) return null
   if (status !== 'FAILED' && status !== 'ABORTED') return null
-  const text = error?.trim()
-  return text || 'agent run failed'
+  return presentRunError(error) || 'agent run failed'
 }

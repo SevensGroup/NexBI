@@ -11,7 +11,7 @@ function yn(v: boolean): string {
 </script>
 
 <template>
-  <article class="rounded border border-line bg-panel p-3 text-sm">
+  <article class="rounded-xl border border-line bg-panel p-4 text-sm">
     <div class="flex justify-between text-[11px] text-mute">
       <span>Reflection</span>
       <span>{{ formatTime(reflection.timestamp) }}</span>

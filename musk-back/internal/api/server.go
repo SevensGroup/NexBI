@@ -10,6 +10,7 @@ import (
 
 	"autonomous-agent/internal/agent/runtime"
 	"autonomous-agent/internal/analyst"
+	"autonomous-agent/internal/board"
 	"autonomous-agent/internal/config"
 	"autonomous-agent/internal/guardrail"
 	"autonomous-agent/internal/logger"
@@ -25,6 +26,7 @@ type Server struct {
 type handler struct {
 	runner runtime.Runner
 	logger logger.Logger
+	boards *board.Store
 }
 
 type runRequest struct {
@@ -69,8 +71,8 @@ type healthResponse struct {
 }
 
 // NewServer wires HTTP routes to the agent runtime.
-func NewServer(cfg config.ServerConfig, runner runtime.Runner, log logger.Logger, extras ...config.ResilienceConfig) *Server {
-	h := &handler{runner: runner, logger: log}
+func NewServer(cfg config.ServerConfig, runner runtime.Runner, log logger.Logger, boards *board.Store, extras ...config.ResilienceConfig) *Server {
+	h := &handler{runner: runner, logger: log, boards: boards}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", h.health)
 	mux.HandleFunc("POST /api/v1/agent/run", h.withRequestID(h.run))
@@ -82,6 +84,7 @@ func NewServer(cfg config.ServerConfig, runner runtime.Runner, log logger.Logger
 	mux.HandleFunc("GET /api/v1/tools", h.withRequestID(h.listTools))
 	mux.HandleFunc("GET /api/v1/semantic/metrics", h.withRequestID(h.listMetrics))
 	mux.HandleFunc("GET /api/v1/semantic/dimensions", h.withRequestID(h.listDimensions))
+	mux.HandleFunc("GET /api/v1/boards/{code}", h.withRequestID(h.getBoard))
 
 	var handler http.Handler = mux
 	if len(extras) > 0 {
@@ -366,6 +369,20 @@ func (h *handler) listDimensions(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"dimensions": out})
+}
+
+func (h *handler) getBoard(w http.ResponseWriter, r *http.Request) {
+	code := strings.TrimSpace(r.PathValue("code"))
+	if h.boards == nil {
+		h.writeError(w, http.StatusNotFound, requestid.From(r.Context()), "board not found")
+		return
+	}
+	item, ok := h.boards.Get(code)
+	if !ok {
+		h.writeError(w, http.StatusNotFound, requestid.From(r.Context()), "board not found")
+		return
+	}
+	writeJSON(w, http.StatusOK, item)
 }
 
 func (h *handler) writeError(w http.ResponseWriter, status int, id, msg string) {

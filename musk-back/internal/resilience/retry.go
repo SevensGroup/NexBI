@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"net"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -55,6 +57,9 @@ func (p RetryPolicy) Do(ctx context.Context, fn func(attempt int) error) error {
 			return last
 		}
 		delay := p.backoff() * time.Duration(1<<uint(i))
+		if wait, ok := providerRetryDelay(last); ok {
+			delay = wait
+		}
 		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
@@ -102,4 +107,23 @@ func Retryable(err error) bool {
 	default:
 		return false
 	}
+}
+
+var providerRetryIn = regexp.MustCompile(`retry in ([0-9]+(?:\.[0-9]+)?)s`)
+
+// providerRetryDelay reads a short "retry in Ns" hint. Delays longer than 90s
+// (daily quota) are ignored so a run does not sleep for hours.
+func providerRetryDelay(err error) (time.Duration, bool) {
+	if err == nil {
+		return 0, false
+	}
+	match := providerRetryIn.FindStringSubmatch(strings.ToLower(err.Error()))
+	if len(match) != 2 {
+		return 0, false
+	}
+	seconds, convErr := strconv.ParseFloat(match[1], 64)
+	if convErr != nil || seconds <= 0 || seconds > 90 {
+		return 0, false
+	}
+	return time.Duration(seconds*float64(time.Second)) + 500*time.Millisecond, true
 }

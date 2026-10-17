@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	// ExpectedBaseURL is musk-back/.env LLM_BASE_URL (SiliconFlow).
-	ExpectedBaseURL = "https://api.siliconflow.cn/v1"
+	// ExpectedBaseURL is musk-back/.env LLM_BASE_URL (Gemini OpenAI-compatible endpoint).
+	ExpectedBaseURL = "https://generativelanguage.googleapis.com/v1beta/openai"
 	// ExpectedModel is musk-back/.env LLM_MODEL.
-	ExpectedModel = "deepseek-ai/DeepSeek-V4-Pro"
+	ExpectedModel = "gemini-3.5-flash"
 	// GoalMessage is the production agent goal.
 	GoalMessage    = "Analyze why Meta ad ROI declined yesterday"
 	placeholderKey = "sk-your-key"
@@ -86,7 +86,7 @@ func LoadDotEnv(path string) (map[string]string, error) {
 	return out, sc.Err()
 }
 
-// LoadLLMEnv reads and validates SiliconFlow DeepSeek settings from .env.
+// LoadLLMEnv reads and validates Gemini settings from .env.
 func LoadLLMEnv() (LLMEnv, error) {
 	path, err := FindEnvFile()
 	if err != nil {

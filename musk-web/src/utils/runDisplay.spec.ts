@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isLiveSampleCatalog,
   isSampleCatalogMessage,
+  presentRunError,
   runFailureBanner,
   SAMPLE_CATALOG_HINT,
 } from './runDisplay'
@@ -20,5 +21,12 @@ describe('live sample catalog', () => {
     expect(runFailureBanner('FAILED', 'invalid decision: agent is required for DELEGATE_AGENT')).toBe(
       'invalid decision: agent is required for DELEGATE_AGENT',
     )
+  })
+
+  it('collapses a Gemini quota body to llm error', () => {
+    const raw =
+      'generate decision: failed to create chat completion: error, status code: 429, message: Quota exceeded for metric: generate_content_free_tier_requests, model: gemini-3.6-flash'
+    expect(presentRunError(raw)).toBe('llm error')
+    expect(runFailureBanner('FAILED', raw)).toBe('llm error')
   })
 })

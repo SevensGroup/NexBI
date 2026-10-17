@@ -38,20 +38,35 @@ function openMem(id: string): void {
 
 <template>
   <div class="grid h-full min-h-0 grid-cols-12">
-    <div class="col-span-8 overflow-auto p-6">
-      <h1 class="text-lg font-medium">Memory Center</h1>
-      <p class="text-sm text-mute">Short-term · Task memory · Long-term knowledge</p>
-      <div class="mt-4">
-        <MemorySearch v-model:q="q" v-model:type="type" v-model:agent="agent" />
-      </div>
-      <PageState class="mt-4" :loading="loading" :empty="!filtered.length" empty-text="No matching memories.">
-        <div class="grid gap-2 md:grid-cols-2">
-          <MemoryCard v-for="m in filtered" :key="m.id" :item="m" @open="openMem" />
+    <div class="col-span-8 overflow-auto px-6 py-8">
+      <header>
+        <h1 class="text-xl font-semibold tracking-tight">Memory</h1>
+        <p class="mt-1 text-sm text-mute">Short-term notes, task memory, and long-term knowledge.</p>
+      </header>
+      <section class="mt-8">
+        <div class="mb-3">
+          <h2 class="text-sm font-medium">Search</h2>
+          <p class="mt-0.5 text-xs leading-5 text-mute">Filter by text, type, or agent.</p>
         </div>
-      </PageState>
+        <div class="rounded-xl border border-line bg-panel p-4">
+          <MemorySearch v-model:q="q" v-model:type="type" v-model:agent="agent" />
+        </div>
+      </section>
+      <section class="mt-8">
+        <div class="mb-3">
+          <h2 class="text-sm font-medium">Items</h2>
+          <p class="mt-0.5 text-xs leading-5 text-mute">Open a card for the full note.</p>
+        </div>
+        <PageState :loading="loading" :empty="!filtered.length" empty-text="No matching memories.">
+          <div class="grid gap-3 md:grid-cols-2">
+            <MemoryCard v-for="m in filtered" :key="m.id" :item="m" @open="openMem" />
+          </div>
+        </PageState>
+      </section>
     </div>
-    <aside class="col-span-4 overflow-auto border-l border-line p-4">
-      <h2 class="mb-3 text-xs uppercase text-mute">Timeline</h2>
+    <aside class="col-span-4 overflow-auto border-l border-line px-5 py-8">
+      <h2 class="text-sm font-medium">Timeline</h2>
+      <p class="mb-4 mt-0.5 text-xs text-mute">Same items, in time order.</p>
       <MemoryTimeline :items="filtered" />
     </aside>
     <MemoryDetailDrawer v-model="open" :item="current" />

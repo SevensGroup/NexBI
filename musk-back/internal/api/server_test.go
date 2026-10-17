@@ -65,13 +65,13 @@ func (s stubRunner) GetRun(_ context.Context, id string) (*runstore.Run, error) 
 	}
 	if s.answer != "" {
 		return &runstore.Run{
-			ID:         id,
-			Status:     runstore.StatusCompleted,
-			Answer:     s.answer,
+			ID:          id,
+			Status:      runstore.StatusCompleted,
+			Answer:      s.answer,
 			FinalResult: s.answer,
-			Confidence: 0.9,
-			Evidence:   []any{},
-			Steps:      []runstore.Step{{ID: "s1", Index: 0}},
+			Confidence:  0.9,
+			Evidence:    []any{},
+			Steps:       []runstore.Step{{ID: "s1", Index: 0}},
 		}, nil
 	}
 	return nil, runstore.ErrNotFound
@@ -98,7 +98,7 @@ func TestAgentRunHandlerTimeout(t *testing.T) {
 		Addr:           ":0",
 		HandlerTimeout: config.Duration(80 * time.Millisecond),
 		WriteTimeout:   config.Duration(time.Second),
-	}, blockingRunner{}, logger.New("error", "json", io.Discard))
+	}, blockingRunner{}, logger.New("error", "json", io.Discard), nil)
 	ts := httptest.NewServer(s.httpServer.Handler)
 	defer ts.Close()
 
@@ -122,7 +122,7 @@ func TestAgentRunHandlerTimeout(t *testing.T) {
 
 func newTestServer(t *testing.T, runner runtime.Runner) *httptest.Server {
 	t.Helper()
-	s := NewServer(config.ServerConfig{Addr: ":0"}, runner, logger.New("error", "json", io.Discard))
+	s := NewServer(config.ServerConfig{Addr: ":0"}, runner, logger.New("error", "json", io.Discard), nil)
 	return httptest.NewServer(s.httpServer.Handler)
 }
 
@@ -203,7 +203,7 @@ func TestAgentRunSurfacesSanitizedLLMError(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(body.Error, "LLM authentication failed") {
+	if body.Error != "llm error" {
 		t.Fatalf("error = %q", body.Error)
 	}
 	if strings.Contains(body.Error, "sk-live-secret123") {
@@ -291,15 +291,15 @@ func TestGetRunAndCatalogs(t *testing.T) {
 	ts := newTestServer(t, stubRunner{
 		answer: "ok",
 		run: &runstore.Run{
-			ID:         "run-99",
-			Goal:       "Analyze why Meta ad ROI declined yesterday",
-			Status:     runstore.StatusCompleted,
-			Answer:     "roi dropped",
+			ID:          "run-99",
+			Goal:        "Analyze why Meta ad ROI declined yesterday",
+			Status:      runstore.StatusCompleted,
+			Answer:      "roi dropped",
 			FinalResult: "roi dropped",
-			Confidence: 0.93,
-			Evidence:   []any{"cpc up"},
-			Steps:      []runstore.Step{{ID: "s1", Index: 0}},
-			Decisions:  []runstore.DecisionRecord{{Type: "FINISH", Reason: "done"}},
+			Confidence:  0.93,
+			Evidence:    []any{"cpc up"},
+			Steps:       []runstore.Step{{ID: "s1", Index: 0}},
+			Decisions:   []runstore.DecisionRecord{{Type: "FINISH", Reason: "done"}},
 		},
 	})
 	defer ts.Close()

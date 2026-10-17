@@ -10,7 +10,7 @@ const emit = defineEmits<{ click: [id: string] }>()
 <template>
   <button
     type="button"
-    class="w-full rounded border border-line bg-panel p-3 text-left hover:border-accent/50"
+    class="w-full rounded-xl border border-line bg-panel p-4 text-left hover:border-accent/50"
     @click="emit('click', agent.id)"
   >
     <div class="flex items-center justify-between gap-2">
