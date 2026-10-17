@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { DEMO_ACCOUNT, login } from '@/auth/session'
+import { isAxiosError } from 'axios'
+import { DEMO_ACCOUNT, DEMO_PASSWORD, establishSession } from '@/auth/session'
+import { api } from '@/services/api/client'
 
 const route = useRoute()
 const router = useRouter()
 const account = ref(DEMO_ACCOUNT)
-const password = ref('')
+const password = ref(DEMO_PASSWORD)
 const error = ref('')
 const submitting = ref(false)
 
@@ -18,15 +20,22 @@ function redirectTarget(): string {
   return '/dashboard'
 }
 
-function submit(): void {
+async function submit(): Promise<void> {
   error.value = ''
   submitting.value = true
-  if (!login(account.value, password.value)) {
-    error.value = 'Incorrect account or password'
+  try {
+    await api.post('/api/v1/auth/login', {
+      account: account.value.trim(),
+      password: password.value,
+    })
+    establishSession()
+    await router.replace(redirectTarget())
+  } catch (err) {
+    const status = isAxiosError(err) ? err.response?.status : 0
+    error.value = status === 401 ? 'Incorrect account or password' : 'Could not sign in. Try again.'
+  } finally {
     submitting.value = false
-    return
   }
-  void router.replace(redirectTarget())
 }
 </script>
 

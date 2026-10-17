@@ -29,6 +29,7 @@ type stubRunner struct {
 	approveErr error
 	rejectErr  error
 	run        *runstore.Run
+	listed     []runstore.Summary
 }
 
 func (s stubRunner) Run(_ context.Context, message string) (string, error) {
@@ -57,6 +58,24 @@ func (s stubRunner) Approve(_ context.Context, _ string) error {
 
 func (s stubRunner) Reject(_ context.Context, _, _ string) error {
 	return s.rejectErr
+}
+
+func (s stubRunner) ListRuns(_ context.Context, offset, limit int) (runstore.Page, error) {
+	items := s.listed
+	if items == nil {
+		items = []runstore.Summary{}
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > len(items) {
+		offset = len(items)
+	}
+	end := len(items)
+	if limit > 0 && offset+limit < end {
+		end = offset + limit
+	}
+	return runstore.Page{Runs: append([]runstore.Summary(nil), items[offset:end]...), Total: len(items)}, nil
 }
 
 func (s stubRunner) GetRun(_ context.Context, id string) (*runstore.Run, error) {
@@ -98,7 +117,7 @@ func TestAgentRunHandlerTimeout(t *testing.T) {
 		Addr:           ":0",
 		HandlerTimeout: config.Duration(80 * time.Millisecond),
 		WriteTimeout:   config.Duration(time.Second),
-	}, blockingRunner{}, logger.New("error", "json", io.Discard), nil)
+	}, blockingRunner{}, logger.New("error", "json", io.Discard), nil, nil)
 	ts := httptest.NewServer(s.httpServer.Handler)
 	defer ts.Close()
 
@@ -122,7 +141,7 @@ func TestAgentRunHandlerTimeout(t *testing.T) {
 
 func newTestServer(t *testing.T, runner runtime.Runner) *httptest.Server {
 	t.Helper()
-	s := NewServer(config.ServerConfig{Addr: ":0"}, runner, logger.New("error", "json", io.Discard), nil)
+	s := NewServer(config.ServerConfig{Addr: ":0"}, runner, logger.New("error", "json", io.Discard), nil, nil)
 	return httptest.NewServer(s.httpServer.Handler)
 }
 
@@ -290,6 +309,12 @@ func TestAgentRunWaitingApprovalAndResume(t *testing.T) {
 func TestGetRunAndCatalogs(t *testing.T) {
 	ts := newTestServer(t, stubRunner{
 		answer: "ok",
+		listed: []runstore.Summary{{
+			ID:     "run-99",
+			Goal:   "why roi fell",
+			Status: runstore.StatusCompleted,
+			Steps:  1,
+		}},
 		run: &runstore.Run{
 			ID:          "run-99",
 			Goal:        "Analyze why Meta ad ROI declined yesterday",
@@ -318,6 +343,42 @@ func TestGetRunAndCatalogs(t *testing.T) {
 	}
 	if run.Goal == "" || run.Status != runstore.StatusCompleted || run.FinalResult == "" {
 		t.Fatalf("run = %+v", run)
+	}
+
+	listed, err := http.Get(ts.URL + "/api/v1/runs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listed.Body.Close()
+	if listed.StatusCode != http.StatusOK {
+		t.Fatalf("list status = %d", listed.StatusCode)
+	}
+	var page struct {
+		Runs     []runstore.Summary `json:"runs"`
+		Page     int                `json:"page"`
+		PageSize int                `json:"page_size"`
+		Total    int                `json:"total"`
+	}
+	if err := json.NewDecoder(listed.Body).Decode(&page); err != nil {
+		t.Fatal(err)
+	}
+	if page.Page != 1 || page.PageSize != 10 || page.Total != 1 || len(page.Runs) != 1 || page.Runs[0].ID != "run-99" {
+		t.Fatalf("page = %+v", page)
+	}
+	second, err := http.Get(ts.URL + "/api/v1/runs?page=2&page_size=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer second.Body.Close()
+	var next struct {
+		Runs  []runstore.Summary `json:"runs"`
+		Total int                `json:"total"`
+	}
+	if err := json.NewDecoder(second.Body).Decode(&next); err != nil {
+		t.Fatal(err)
+	}
+	if next.Total != 1 || len(next.Runs) != 0 {
+		t.Fatalf("second page = %+v", next)
 	}
 
 	for _, path := range []string{"/api/v1/agents", "/api/v1/tools", "/api/v1/semantic/metrics", "/api/v1/semantic/dimensions"} {

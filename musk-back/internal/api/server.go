@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,7 +15,9 @@ import (
 	"autonomous-agent/internal/config"
 	"autonomous-agent/internal/guardrail"
 	"autonomous-agent/internal/logger"
+	"autonomous-agent/internal/loginlog"
 	"autonomous-agent/internal/requestid"
+	"autonomous-agent/internal/runstore"
 )
 
 // Server is the HTTP process boundary. It depends on runtime.Runner, not Eino.
@@ -27,6 +30,7 @@ type handler struct {
 	runner runtime.Runner
 	logger logger.Logger
 	boards *board.Store
+	logins *loginlog.Store
 }
 
 type runRequest struct {
@@ -71,14 +75,16 @@ type healthResponse struct {
 }
 
 // NewServer wires HTTP routes to the agent runtime.
-func NewServer(cfg config.ServerConfig, runner runtime.Runner, log logger.Logger, boards *board.Store, extras ...config.ResilienceConfig) *Server {
-	h := &handler{runner: runner, logger: log, boards: boards}
+func NewServer(cfg config.ServerConfig, runner runtime.Runner, log logger.Logger, boards *board.Store, logins *loginlog.Store, extras ...config.ResilienceConfig) *Server {
+	h := &handler{runner: runner, logger: log, boards: boards, logins: logins}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", h.health)
+	mux.HandleFunc("POST /api/v1/auth/login", h.withRequestID(h.login))
 	mux.HandleFunc("POST /api/v1/agent/run", h.withRequestID(h.run))
 	mux.HandleFunc("POST /api/v1/agent/resume", h.withRequestID(h.resume))
 	mux.HandleFunc("POST /api/v1/agent/approvals/{id}/approve", h.withRequestID(h.approve))
 	mux.HandleFunc("POST /api/v1/agent/approvals/{id}/reject", h.withRequestID(h.reject))
+	mux.HandleFunc("GET /api/v1/runs", h.withRequestID(h.listRuns))
 	mux.HandleFunc("GET /api/v1/runs/{id}", h.withRequestID(h.getRun))
 	mux.HandleFunc("GET /api/v1/agents", h.withRequestID(h.listAgents))
 	mux.HandleFunc("GET /api/v1/tools", h.withRequestID(h.listTools))
@@ -298,6 +304,43 @@ func (h *handler) withRequestID(next http.HandlerFunc) http.HandlerFunc {
 		w.Header().Set("X-Request-ID", id)
 		next(w, r.WithContext(requestid.With(r.Context(), id)))
 	}
+}
+
+func (h *handler) listRuns(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id := requestid.From(ctx)
+	page := queryPositive(r, "page", 1)
+	pageSize := queryPositive(r, "page_size", 10)
+	if pageSize > 50 {
+		pageSize = 50
+	}
+	result, err := h.runner.ListRuns(ctx, (page-1)*pageSize, pageSize)
+	if err != nil {
+		h.logger.ErrorContext(ctx, "list runs failed", "request_id", id, "error", err)
+		h.writeError(w, http.StatusInternalServerError, id, "could not list runs")
+		return
+	}
+	if result.Runs == nil {
+		result.Runs = []runstore.Summary{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"runs":      result.Runs,
+		"page":      page,
+		"page_size": pageSize,
+		"total":     result.Total,
+	})
+}
+
+func queryPositive(r *http.Request, key string, fallback int) int {
+	raw := strings.TrimSpace(r.URL.Query().Get(key))
+	if raw == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil || n < 1 {
+		return fallback
+	}
+	return n
 }
 
 func (h *handler) getRun(w http.ResponseWriter, r *http.Request) {

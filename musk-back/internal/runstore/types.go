@@ -98,6 +98,58 @@ type ReflectionRecord struct {
 	At                 time.Time `json:"at"`
 }
 
+// Summary is the list row for a past run. It omits steps, tools, and the answer.
+type Summary struct {
+	ID         string    `json:"id"`
+	Goal       string    `json:"goal"`
+	Status     Status    `json:"status"`
+	Steps      int       `json:"steps"`
+	Confidence float64   `json:"confidence,omitempty"`
+	CostUSD    float64   `json:"cost_usd,omitempty"`
+	LatencyMS  int64     `json:"latency_ms,omitempty"`
+	Error      string    `json:"error,omitempty"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+// Summarize copies the fields shown in the run history list.
+func Summarize(run *Run) Summary {
+	if run == nil {
+		return Summary{}
+	}
+	return Summary{
+		ID:         run.ID,
+		Goal:       run.Goal,
+		Status:     run.Status,
+		Steps:      len(run.Steps),
+		Confidence: run.Confidence,
+		CostUSD:    run.CostUSD,
+		LatencyMS:  run.LatencyMS,
+		Error:      run.Error,
+		CreatedAt:  run.CreatedAt,
+		UpdatedAt:  run.UpdatedAt,
+	}
+}
+
+// Page is one slice of the run history list.
+type Page struct {
+	Runs  []Summary
+	Total int
+}
+
+func listWindow(offset, limit int) (int, int) {
+	if offset < 0 {
+		offset = 0
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+	return offset, limit
+}
+
 // Clone returns a deep-enough copy for concurrent readers.
 func (r *Run) Clone() *Run {
 	if r == nil {

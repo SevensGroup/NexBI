@@ -9,8 +9,12 @@ export function isAuthed(): boolean {
 
 export function login(account: string, password: string): boolean {
   if (account.trim() !== DEMO_ACCOUNT || password !== DEMO_PASSWORD) return false
-  localStorage.setItem(SESSION_KEY, '1')
+  establishSession()
   return true
+}
+
+export function establishSession(): void {
+  localStorage.setItem(SESSION_KEY, '1')
 }
 
 export function logout(): void {

@@ -124,6 +124,46 @@ ON CONFLICT (id) DO UPDATE SET
 	return err
 }
 
+func (s *pgStore) List(ctx context.Context, offset, limit int) (Page, error) {
+	if s == nil || s.db == nil {
+		return Page{}, nil
+	}
+	var total int
+	if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM agent_runs`).Scan(&total); err != nil {
+		return Page{}, err
+	}
+	offset, limit = listWindow(offset, limit)
+	rows, err := s.db.QueryContext(ctx, `
+SELECT payload FROM agent_runs
+ORDER BY updated_at DESC
+LIMIT $1 OFFSET $2`, limit, offset)
+	if err != nil {
+		return Page{}, err
+	}
+	defer rows.Close()
+	runs, err := summariesFromPayloads(rows)
+	if err != nil {
+		return Page{}, err
+	}
+	return Page{Runs: runs, Total: total}, nil
+}
+
+func summariesFromPayloads(rows *sql.Rows) ([]Summary, error) {
+	out := make([]Summary, 0)
+	for rows.Next() {
+		var payload []byte
+		if err := rows.Scan(&payload); err != nil {
+			return nil, err
+		}
+		var run Run
+		if err := json.Unmarshal(payload, &run); err != nil {
+			return nil, err
+		}
+		out = append(out, Summarize(&run))
+	}
+	return out, rows.Err()
+}
+
 func (s *pgStore) Close() error {
 	if s == nil || s.db == nil {
 		return nil

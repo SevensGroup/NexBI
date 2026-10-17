@@ -2,6 +2,7 @@ package runstore
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -87,6 +88,42 @@ func (s *memoryStore) Update(_ context.Context, id string, mut func(*Run)) (*Run
 	next.UpdatedAt = time.Now().UTC()
 	s.runs[id] = next
 	return next.Clone(), nil
+}
+
+func (s *memoryStore) List(_ context.Context, offset, limit int) (Page, error) {
+	if s == nil {
+		return Page{}, nil
+	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := make([]Summary, 0, len(s.runs))
+	for _, run := range s.runs {
+		out = append(out, Summarize(run))
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if !out[i].UpdatedAt.Equal(out[j].UpdatedAt) {
+			return out[i].UpdatedAt.After(out[j].UpdatedAt)
+		}
+		return out[i].ID > out[j].ID
+	})
+	return slicePage(out, offset, limit), nil
+}
+
+func slicePage(out []Summary, offset, limit int) Page {
+	offset, limit = listWindow(offset, limit)
+	total := len(out)
+	if offset > total {
+		offset = total
+	}
+	end := offset + limit
+	if end > total {
+		end = total
+	}
+	runs := append([]Summary(nil), out[offset:end]...)
+	if runs == nil {
+		runs = []Summary{}
+	}
+	return Page{Runs: runs, Total: total}
 }
 
 func (s *memoryStore) Close() error { return nil }

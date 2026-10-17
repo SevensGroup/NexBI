@@ -12,6 +12,7 @@ import (
 	"autonomous-agent/internal/api"
 	"autonomous-agent/internal/config"
 	"autonomous-agent/internal/logger"
+	"autonomous-agent/internal/loginlog"
 	"autonomous-agent/internal/model"
 	"autonomous-agent/internal/observability"
 )
@@ -59,7 +60,14 @@ func run(configPath string) error {
 	}
 	defer rt.Close()
 
-	srv := api.NewServer(cfg.Server, rt, log, rt.Boards(), cfg.Resilience)
+	logins, err := loginlog.Open(ctx, "")
+	if err != nil {
+		return err
+	}
+	defer logins.Close()
+	log.InfoContext(ctx, "login log store ready", "database", logins.UsesDatabase())
+
+	srv := api.NewServer(cfg.Server, rt, log, rt.Boards(), logins, cfg.Resilience)
 
 	errCh := make(chan error, 1)
 	go func() {

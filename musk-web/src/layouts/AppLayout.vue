@@ -12,10 +12,7 @@ const router = useRouter()
 const runStore = useAgentRunStore()
 useBackendHealth()
 
-const runHref = computed(() => {
-  const id = runStore.state.runId || runStore.history[0]?.id
-  return id ? `/runs/${id}` : '/run'
-})
+const runHref = computed(() => '/run')
 const nav = computed(() => [
   { to: '/dashboard', label: 'Dashboard', key: 'dashboard' },
   { to: runHref.value, label: 'Run', key: 'run' },

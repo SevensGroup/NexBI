@@ -172,9 +172,52 @@ export async function resumeRun(runId: string): Promise<StartRunResponse> {
   }
 }
 
-export async function listRuns(): Promise<RunSummary[]> {
-  if (isMockMode()) return MOCK_RUNS
-  return []
+export const RUN_PAGE_SIZE = 10
+
+export interface RunListPage {
+  runs: RunSummary[]
+  page: number
+  pageSize: number
+  total: number
+}
+
+export async function listRuns(page = 1, pageSize = RUN_PAGE_SIZE): Promise<RunListPage> {
+  const safePage = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1
+  const safeSize = Number.isFinite(pageSize) && pageSize >= 1 ? Math.min(50, Math.floor(pageSize)) : RUN_PAGE_SIZE
+  if (isMockMode()) {
+    const start = (safePage - 1) * safeSize
+    return { runs: MOCK_RUNS.slice(start, start + safeSize), page: safePage, pageSize: safeSize, total: MOCK_RUNS.length }
+  }
+  const { data } = await api.get('/api/v1/runs', { params: { page: safePage, page_size: safeSize } })
+  const runs = (data.runs ?? []) as Array<{
+    id: string
+    goal: string
+    status: string
+    steps?: number
+    confidence?: number
+    cost_usd?: number
+    latency_ms?: number
+    created_at: string
+    updated_at?: string
+  }>
+  return {
+    page: Number(data.page) || safePage,
+    pageSize: Number(data.page_size) || safeSize,
+    total: Number(data.total) || 0,
+    runs: runs.map((run) => ({
+      id: run.id,
+      goal: run.goal,
+      status: run.status,
+      startedAt: run.created_at,
+      endedAt: run.updated_at,
+      durationMs: run.latency_ms ?? 0,
+      steps: run.steps ?? 0,
+      llmCalls: 0,
+      tokens: 0,
+      costUsd: run.cost_usd ?? 0,
+      confidence: run.confidence,
+    })),
+  }
 }
 
 export async function listMemories() {

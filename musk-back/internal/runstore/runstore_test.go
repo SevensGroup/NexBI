@@ -56,4 +56,25 @@ func TestMemoryStoreLifecycle(t *testing.T) {
 	if _, err := s.Get(context.Background(), "missing"); err != ErrNotFound {
 		t.Fatalf("err = %v", err)
 	}
+
+	if err := s.Save(context.Background(), &Run{ID: "older", Goal: "first", Status: StatusCompleted}); err != nil {
+		t.Fatal(err)
+	}
+	list, err := s.List(context.Background(), 0, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if list.Total != 2 || len(list.Runs) != 2 || list.Runs[0].ID != "older" {
+		t.Fatalf("list = %+v", list)
+	}
+	if list.Runs[1].ID != "r1" || list.Runs[1].Goal != "analyze roi" || list.Runs[1].Steps != 1 {
+		t.Fatalf("older row = %+v", list.Runs[1])
+	}
+	second, err := s.List(context.Background(), 1, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if second.Total != 2 || len(second.Runs) != 1 || second.Runs[0].ID != "r1" {
+		t.Fatalf("second page = %+v", second)
+	}
 }

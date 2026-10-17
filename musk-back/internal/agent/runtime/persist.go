@@ -295,6 +295,14 @@ func evidenceFromAnswer(answer string, state *decision.AgentState) []any {
 	return out
 }
 
+// ListRuns returns one page of runs, newest first, plus the total count.
+func (r *Runtime) ListRuns(ctx context.Context, offset, limit int) (runstore.Page, error) {
+	if r == nil || r.runs == nil {
+		return runstore.Page{Runs: []runstore.Summary{}}, nil
+	}
+	return r.runs.List(ctx, offset, limit)
+}
+
 // GetRun returns a persisted Agent Run with live token_usage / cost from the tracker.
 func (r *Runtime) GetRun(ctx context.Context, id string) (*runstore.Run, error) {
 	if r == nil || r.runs == nil {

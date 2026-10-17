@@ -38,6 +38,7 @@ type Runner interface {
 	Approve(ctx context.Context, approvalID string) error
 	Reject(ctx context.Context, approvalID, reason string) error
 	GetRun(ctx context.Context, id string) (*runstore.Run, error)
+	ListRuns(ctx context.Context, offset, limit int) (runstore.Page, error)
 	ListAgents() []AgentInfo
 	ListTools() []tools.Info
 	ListSemanticMetrics() []semantic.Metric

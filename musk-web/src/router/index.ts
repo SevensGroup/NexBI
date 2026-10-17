@@ -25,7 +25,7 @@ const router = createRouter({
       component: () => import('@/pages/AdvertisingAnalystPage.vue'),
     },
     { path: '/agents/:id', name: 'agent-workspace', component: () => import('@/pages/AgentWorkspacePage.vue') },
-    { path: '/runs', redirect: '/dashboard' },
+    { path: '/runs', redirect: '/run' },
     { path: '/runs/:id', name: 'run-detail', component: () => import('@/pages/RunDetailPage.vue') },
     { path: '/tasks', name: 'tasks', redirect: () => openRun('tasks') },
     { path: '/memory', redirect: { path: '/settings', query: { section: 'memory' } } },

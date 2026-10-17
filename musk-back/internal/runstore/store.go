@@ -14,5 +14,6 @@ type Store interface {
 	Get(ctx context.Context, id string) (*Run, error)
 	Save(ctx context.Context, run *Run) error
 	Update(ctx context.Context, id string, mut func(*Run)) (*Run, error)
+	List(ctx context.Context, offset, limit int) (Page, error)
 	Close() error
 }
