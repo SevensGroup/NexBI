@@ -9,6 +9,8 @@ import ToolTimeline from '@/components/tool/ToolTimeline.vue'
 import { MOCK_MCP } from '@/mocks/catalog'
 import { useAgentRunStore } from '@/stores/agentRun'
 
+defineProps<{ embedded?: boolean }>()
+
 const run = useAgentRunStore()
 const last = computed(() => run.state.mcp.at(-1))
 </script>
@@ -16,7 +18,7 @@ const last = computed(() => run.state.mcp.at(-1))
 <template>
   <div class="h-full overflow-auto">
     <div class="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-8">
-      <header>
+      <header v-if="!embedded">
         <h1 class="text-xl font-semibold tracking-tight">Tools</h1>
         <p class="mt-1 text-sm text-mute">Agent, semantic query, compiler, MCP, then the result.</p>
       </header>

@@ -10,6 +10,8 @@ import type { AgentInfo } from '@/types'
 import { useAgentRunStore } from '@/stores/agentRun'
 import { formatTime } from '@/utils/format'
 
+defineProps<{ embedded?: boolean }>()
+
 const router = useRouter()
 const run = useAgentRunStore()
 const agents = ref<AgentInfo[]>([])
@@ -63,10 +65,10 @@ function goWorkspace(id: string): void {
 
 <template>
   <div class="flex h-full min-h-0 flex-col">
-    <div class="flex items-end justify-between gap-4 px-6 pb-4 pt-6">
+    <div class="flex items-end justify-between gap-4 px-6 pb-4 pt-4">
       <header>
-        <h1 class="text-xl font-semibold tracking-tight">Agents</h1>
-        <p class="mt-1 text-sm text-mute">Coordinator delegates to Analyst, Researcher, and Reviewer.</p>
+        <h1 v-if="!embedded" class="text-xl font-semibold tracking-tight">Agents</h1>
+        <p class="text-sm text-mute" :class="embedded ? '' : 'mt-1'">Coordinator delegates to Analyst, Researcher, and Reviewer.</p>
       </header>
       <button class="h-9 shrink-0 rounded-xl bg-accent px-4 text-sm font-medium text-white" type="button" @click="router.push('/agents/advertising-analyst')">
         Advertising Analyst

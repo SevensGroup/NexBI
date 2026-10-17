@@ -5,6 +5,7 @@ import { DEFAULT_GOAL } from '@/mocks/catalog'
 const props = defineProps<{ disabled?: boolean; placeholder?: string }>()
 const emit = defineEmits<{ submit: [goal: string] }>()
 const text = useStorage('musk-agent-goal', DEFAULT_GOAL)
+if (text.value === 'Analyze why Meta ad ROI declined yesterday') text.value = DEFAULT_GOAL
 
 function send(): void {
   const g = text.value.trim()

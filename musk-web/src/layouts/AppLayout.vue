@@ -12,17 +12,16 @@ const router = useRouter()
 const runStore = useAgentRunStore()
 useBackendHealth()
 
-const nav = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/agents', label: 'Agents' },
-  { to: '/runs', label: 'Runs' },
-  { to: '/tasks', label: 'Tasks' },
-  { to: '/tools', label: 'Tools' },
-  { to: '/memory', label: 'Memory' },
-  { to: '/semantic', label: 'Semantic' },
-  { to: '/approvals', label: 'Approvals' },
-  { to: '/settings', label: 'Settings' },
-]
+const runHref = computed(() => {
+  const id = runStore.state.runId || runStore.history[0]?.id
+  return id ? `/runs/${id}` : '/run'
+})
+const nav = computed(() => [
+  { to: '/dashboard', label: 'Dashboard', key: 'dashboard' },
+  { to: runHref.value, label: 'Run', key: 'run' },
+  { to: '/approvals', label: 'Approvals', key: 'approvals' },
+  { to: '/settings', label: 'Settings', key: 'settings' },
+])
 
 const active = computed(() => route.path)
 const needsApproval = computed(() => runStore.state.status === 'WAITING_APPROVAL')
@@ -34,10 +33,11 @@ function signOut(): void {
   void router.push('/login')
 }
 
-function isActive(to: string): boolean {
-  if (to === '/agents') return active.value.startsWith('/agents')
-  if (to === '/runs') return active.value.startsWith('/runs')
-  return active.value === to || active.value.startsWith(`${to}/`)
+function isActive(key: string): boolean {
+  if (key === 'run') return active.value === '/run' || active.value.startsWith('/runs/')
+  if (key === 'settings') return active.value.startsWith('/settings')
+  if (key === 'approvals') return active.value.startsWith('/approvals')
+  return active.value === '/dashboard' || active.value.startsWith('/dashboard/')
 }
 </script>
 
@@ -52,10 +52,10 @@ function isActive(to: string): boolean {
         <div class="mx-auto flex w-max min-w-full items-center justify-center gap-1">
           <RouterLink
             v-for="item in nav"
-            :key="item.to"
+            :key="item.key"
             :to="item.to"
             class="shrink-0 rounded px-2.5 py-1 text-mute hover:bg-raised hover:text-ink"
-            :class="isActive(item.to) ? 'bg-raised text-ink' : ''"
+            :class="isActive(item.key) ? 'bg-raised text-ink' : ''"
           >
             {{ item.label }}
           </RouterLink>

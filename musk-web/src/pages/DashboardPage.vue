@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import MetricCard from '@/components/common/MetricCard.vue'
 import PageState from '@/components/common/PageState.vue'
 import { DEFAULT_GOAL, MOCK_DASHBOARD, MOCK_RUNS } from '@/mocks/catalog'
-import { formatDuration, formatPct, formatUsd } from '@/utils/format'
+import { formatDateTime, formatDuration, formatPct, formatUsd } from '@/utils/format'
 import { isMockMode } from '@/services/api/client'
 import { startRun } from '@/composables/useAgentSession'
 import { useAgentRunStore } from '@/stores/agentRun'
@@ -15,11 +15,11 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const starting = ref(false)
 const suggestions = [
-  'Build me an advertising data board',
+  DEFAULT_GOAL,
   'Compare spend, revenue, and ROAS by channel',
   'Find campaigns with high spend and low return',
 ]
-const goal = ref(suggestions[0])
+const goal = ref(DEFAULT_GOAL)
 const stats = ref(MOCK_DASHBOARD)
 const mock = isMockMode()
 
@@ -116,8 +116,8 @@ async function startFromDashboard(): Promise<void> {
 
         <section>
           <div class="mb-3">
-            <h2 class="text-sm font-medium">Recent runs</h2>
-            <p class="mt-0.5 text-xs leading-5 text-mute">Open a row to replay the timeline.</p>
+            <h2 class="text-sm font-medium">Runs</h2>
+            <p class="mt-0.5 text-xs leading-5 text-mute">Open a row for the decisions, the task plan, and the published board.</p>
           </div>
           <div class="overflow-hidden rounded-xl border border-line bg-panel">
             <table v-if="mock || run.history.length" class="w-full text-left text-sm">
@@ -126,6 +126,7 @@ async function startFromDashboard(): Promise<void> {
                   <th class="px-4 py-3 font-medium">Run</th>
                   <th class="px-4 py-3 font-medium">Goal</th>
                   <th class="px-4 py-3 font-medium">Status</th>
+                  <th class="px-4 py-3 font-medium">Started</th>
                   <th v-if="mock" class="px-4 py-3 font-medium">Steps</th>
                   <th v-if="mock" class="px-4 py-3 font-medium">Cost</th>
                 </tr>
@@ -140,6 +141,7 @@ async function startFromDashboard(): Promise<void> {
                   <td class="px-4 py-3.5 font-mono text-xs">{{ r.id }}</td>
                   <td class="max-w-md truncate px-4 py-3.5">{{ r.goal }}</td>
                   <td class="px-4 py-3.5">{{ r.status }}</td>
+                  <td class="px-4 py-3.5 text-mute">{{ formatDateTime(r.startedAt) }}</td>
                   <td v-if="mock" class="px-4 py-3.5">{{ r.steps }}</td>
                   <td v-if="mock" class="px-4 py-3.5">{{ formatUsd(r.costUsd) }}</td>
                 </tr>

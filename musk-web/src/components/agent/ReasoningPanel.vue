@@ -97,8 +97,9 @@ function reflectionText(reflection: Reflection): string {
           </div>
           <p class="mt-1.5 whitespace-pre-wrap break-words text-sm leading-6">{{ step.body }}</p>
         </li>
-        <li v-if="working" class="rounded-xl border border-accent/40 bg-panel px-3 py-3 text-sm text-mute">
-          Thinking…
+        <li v-if="working" class="flex items-center gap-3 rounded-xl border border-accent/40 bg-panel px-3 py-3 text-sm text-mute">
+          <span class="spin-ring shrink-0" />
+          <span>Thinking<span class="thinking-caret" /></span>
         </li>
       </ol>
     </div>

@@ -5,6 +5,8 @@ import AgentInput from '@/components/agent/AgentInput.vue'
 import AgentStateBadge from '@/components/agent/AgentStateBadge.vue'
 import ReasoningPanel from '@/components/agent/ReasoningPanel.vue'
 import BoardPanel from '@/components/board/BoardPanel.vue'
+import AgentsPage from '@/pages/AgentsPage.vue'
+import TasksPage from '@/pages/TasksPage.vue'
 import { replayRun, startRun } from '@/composables/useAgentSession'
 import { MOCK_RUNS } from '@/mocks/catalog'
 import { formatUsd } from '@/utils/format'
@@ -23,6 +25,20 @@ const meta = computed(() => {
 })
 const failMessage = computed(() => runFailureBanner(run.state.status, run.state.error))
 const badgeStatus = computed(() => (run.state.runId ? run.state.status : 'IDLE'))
+const view = computed(() => (route.query.view === 'agents' || route.query.view === 'tasks' ? route.query.view : 'board'))
+const views = [
+  { id: 'board', label: 'Board' },
+  { id: 'agents', label: 'Agents' },
+  { id: 'tasks', label: 'Tasks' },
+] as const
+
+function setView(next: 'board' | 'agents' | 'tasks'): void {
+  const query = { ...route.query }
+  if (next === 'board') delete query.view
+  else query.view = next
+  void router.replace({ query })
+}
+
 const busy = computed(() => {
   const status = run.state.status
   const terminal = status === 'COMPLETED' || status === 'FAILED'
@@ -57,7 +73,21 @@ async function onSubmit(goal: string): Promise<void> {
           </template>
         </p>
       </div>
-      <AgentStateBadge v-if="!sample" :status="badgeStatus" :live="Boolean(run.state.runId)" />
+      <div class="flex shrink-0 items-center gap-3">
+        <div v-if="!sample" class="flex rounded-lg border border-line p-0.5 text-xs">
+          <button
+            v-for="item in views"
+            :key="item.id"
+            class="rounded-md px-2.5 py-1"
+            :class="view === item.id ? 'bg-raised text-ink' : 'text-mute hover:text-ink'"
+            type="button"
+            @click="setView(item.id)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+        <AgentStateBadge v-if="!sample" :status="badgeStatus" :live="Boolean(run.state.runId)" />
+      </div>
     </header>
     <div v-if="sample" data-testid="sample-catalog-hint" class="border-b border-line px-6 py-4 text-sm text-mute">
       {{ SAMPLE_CATALOG_HINT }}
@@ -71,7 +101,13 @@ async function onSubmit(goal: string): Promise<void> {
       <span class="font-medium">FAILED</span>
       <span class="ml-2 whitespace-pre-wrap break-words">{{ failMessage }}</span>
     </div>
-    <div v-if="!sample" class="grid min-h-0 flex-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+    <div v-if="!sample && view === 'agents'" class="min-h-0 flex-1">
+      <AgentsPage embedded />
+    </div>
+    <div v-else-if="!sample && view === 'tasks'" class="min-h-0 flex-1">
+      <TasksPage embedded />
+    </div>
+    <div v-else-if="!sample" class="grid min-h-0 flex-1 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
       <div class="min-h-0 border-r border-line">
         <ReasoningPanel />
       </div>

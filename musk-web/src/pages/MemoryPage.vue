@@ -8,6 +8,8 @@ import PageState from '@/components/common/PageState.vue'
 import { listMemories } from '@/services/api/agent'
 import type { MemoryItem } from '@/types'
 
+defineProps<{ embedded?: boolean }>()
+
 const items = ref<MemoryItem[]>([])
 const loading = ref(true)
 const q = ref('')
@@ -39,7 +41,7 @@ function openMem(id: string): void {
 <template>
   <div class="grid h-full min-h-0 grid-cols-12">
     <div class="col-span-8 overflow-auto px-6 py-8">
-      <header>
+      <header v-if="!embedded">
         <h1 class="text-xl font-semibold tracking-tight">Memory</h1>
         <p class="mt-1 text-sm text-mute">Short-term notes, task memory, and long-term knowledge.</p>
       </header>

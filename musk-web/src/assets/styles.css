@@ -93,6 +93,32 @@ body,
   to { opacity: 1; transform: none; }
 }
 
+.spin-ring {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #2a303b;
+  border-top-color: #5b8def;
+  border-radius: 999px;
+  animation: spin-ring 0.7s linear infinite;
+}
+
+@keyframes spin-ring {
+  to { transform: rotate(360deg); }
+}
+
+.loading-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #181c24 0%, #2a303b 45%, #181c24 100%);
+  background-size: 200% 100%;
+  animation: loading-bar 1.2s ease-in-out infinite;
+}
+
+@keyframes loading-bar {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
 .thinking-caret::after {
   content: '';
   display: inline-block;

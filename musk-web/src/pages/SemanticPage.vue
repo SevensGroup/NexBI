@@ -9,6 +9,8 @@ import { MOCK_DATASOURCES, MOCK_ENTITIES, MOCK_METRICS, MOCK_DIMENSIONS } from '
 import { listDimensions, listMetrics } from '@/services/api/agent'
 import type { SemanticDimension, SemanticMetric } from '@/types'
 
+defineProps<{ embedded?: boolean }>()
+
 const tab = ref('metrics')
 const tabs = [
   { id: 'metrics', label: 'Metrics' },
@@ -76,7 +78,7 @@ onMounted(async () => {
 <template>
   <div class="h-full overflow-auto">
     <div class="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-8">
-    <header>
+    <header v-if="!embedded">
       <h1 class="text-xl font-semibold tracking-tight">Semantic</h1>
       <p class="mt-1 text-sm text-mute">Business names first. Compiled fields stay behind the query.</p>
     </header>

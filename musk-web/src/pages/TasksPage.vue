@@ -8,6 +8,8 @@ import { useAgentRunStore } from '@/stores/agentRun'
 import { isMockMode } from '@/services/api/client'
 import { ADS_PLAN } from '@/mocks/events'
 
+defineProps<{ embedded?: boolean }>()
+
 const run = useAgentRunStore()
 const plan = computed(() => run.state.plan)
 
@@ -27,9 +29,9 @@ onMounted(() => {
 
 <template>
   <div class="flex h-full min-h-0 flex-col">
-    <header class="px-6 pb-4 pt-6">
-      <h1 class="text-xl font-semibold tracking-tight">Tasks</h1>
-      <p class="mt-1 text-sm text-mute">The current plan, the task graph, and the execution timeline.</p>
+    <header class="px-6 pb-4 pt-4">
+      <h1 v-if="!embedded" class="text-xl font-semibold tracking-tight">Tasks</h1>
+      <p class="text-sm text-mute" :class="embedded ? '' : 'mt-1'">The current plan, the task graph, and the execution timeline.</p>
     </header>
     <div class="grid min-h-0 flex-1 grid-cols-12 gap-4 px-6 pb-6">
       <aside class="col-span-3 overflow-auto rounded-xl border border-line bg-panel p-4">

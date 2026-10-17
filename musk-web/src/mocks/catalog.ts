@@ -279,4 +279,4 @@ export const MOCK_DASHBOARD = {
   costUsd: 2.37,
 }
 
-export const DEFAULT_GOAL = 'Analyze why Meta ad ROI declined yesterday'
+export const DEFAULT_GOAL = 'Build me an advertising data board'

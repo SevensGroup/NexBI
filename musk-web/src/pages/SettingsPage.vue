@@ -1,21 +1,60 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import MemoryPage from '@/pages/MemoryPage.vue'
+import SemanticPage from '@/pages/SemanticPage.vue'
+import ToolsPage from '@/pages/ToolsPage.vue'
 import { useConnectionStore } from '@/stores/connection'
 import { isMockMode } from '@/services/api/client'
 
+const route = useRoute()
+const router = useRouter()
 const conn = useConnectionStore()
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8080'
 const mock = isMockMode()
 const connected = computed(() => conn.status === 'Connected')
+const sections = [
+  { id: 'connection', label: 'Connection' },
+  { id: 'tools', label: 'Tools' },
+  { id: 'semantic', label: 'Semantic' },
+  { id: 'memory', label: 'Memory' },
+] as const
+const section = computed(() => {
+  const value = route.query.section
+  return sections.some((item) => item.id === value) ? String(value) : 'connection'
+})
+
+function openSection(id: string): void {
+  const query = id === 'connection' ? {} : { section: id }
+  void router.replace({ path: '/settings', query })
+}
 </script>
 
 <template>
-  <div class="h-full overflow-auto">
-    <div class="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-8">
+  <div class="flex h-full min-h-0 flex-col">
+    <div class="mx-auto flex w-full max-w-5xl shrink-0 flex-col gap-4 px-6 pb-4 pt-8">
       <header>
         <h1 class="text-xl font-semibold tracking-tight">Settings</h1>
-        <p class="mt-1 text-sm text-mute">Stored in this build. Restart Vite after changing .env.</p>
+        <p class="mt-1 text-sm text-mute">Connection, tool catalog, metric definitions, and memory.</p>
       </header>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="item in sections"
+          :key="item.id"
+          class="rounded-full border px-3 py-1 text-xs"
+          :class="section === item.id ? 'border-line bg-raised text-ink' : 'border-transparent text-mute hover:text-ink'"
+          type="button"
+          @click="openSection(item.id)"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+    </div>
+    <ToolsPage v-if="section === 'tools'" embedded class="min-h-0 flex-1" />
+    <SemanticPage v-else-if="section === 'semantic'" embedded class="min-h-0 flex-1" />
+    <MemoryPage v-else-if="section === 'memory'" embedded class="min-h-0 flex-1" />
+    <div v-else class="min-h-0 flex-1 overflow-auto">
+    <div class="mx-auto flex max-w-3xl flex-col gap-8 px-6 pb-8">
 
       <section>
         <div class="mb-3">
@@ -88,6 +127,7 @@ const connected = computed(() => conn.status === 'Connected')
           </div>
         </div>
       </section>
+    </div>
     </div>
   </div>
 </template>
