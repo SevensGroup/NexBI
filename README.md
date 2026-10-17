@@ -4,11 +4,11 @@ SEVENS · AI Growth Data Hub
 
 An operator types one natural-language sentence and gets a cross-channel, metric-consistent, interactive dashboard in seconds.
 
-NexBI is the AI data analyst for Chinese brands selling overseas. It follows the product shape of Polar Analytics and fits the channel mix those brands actually run: Meta, Google Ads, TikTok, GA4, and, once connected, Shopify and Amazon.
+NexBI is the AI data analyst for brands expanding overseas. It follows the product shape of Polar Analytics and fits the channel mix those brands actually run: Meta, Google Ads, TikTok, GA4, and, once connected, Shopify and Amazon.
 
 ## The problem
 
-Ad data sits in separate platforms. Traditional BI (Quick BI, Tencent Cloud BI) takes a long time to set up and locks people into fixed dimensions. Non-technical operators cannot answer a full-channel ROI question on their own. Overseas, Polar Analytics has already turned an ecommerce data stack plus an AI analyst into a product; its website says it serves more than 4,000 brands and agencies. The Chinese outbound-brand market still lacks an AI-native analytics tool.
+Ad data sits in separate platforms. Traditional BI (Quick BI, Tencent Cloud BI) takes a long time to set up and locks people into fixed dimensions. Non-technical operators cannot answer a full-channel ROI question on their own. Overseas, Polar Analytics has already turned an ecommerce data stack plus an AI analyst into a product; its website says it serves more than 4,000 brands and agencies. Brands expanding overseas still lack an AI-native analytics tool.
 
 ## What it does
 
