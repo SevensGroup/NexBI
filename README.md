@@ -1,10 +1,10 @@
-# bi-agent
+# NexBI
 
 SEVENS · AI Growth Data Hub
 
 An operator types one natural-language sentence and gets a cross-channel, metric-consistent, interactive dashboard in seconds.
 
-bi-agent is the AI data analyst for Chinese brands selling overseas. It follows the product shape of Polar Analytics and fits the channel mix those brands actually run: Meta, Google Ads, TikTok, GA4, and, once connected, Shopify and Amazon.
+NexBI is the AI data analyst for Chinese brands selling overseas. It follows the product shape of Polar Analytics and fits the channel mix those brands actually run: Meta, Google Ads, TikTok, GA4, and, once connected, Shopify and Amazon.
 
 ## The problem
 

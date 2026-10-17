@@ -1,4 +1,4 @@
-# Musk Web Phase 11 — Advertising Autonomous Analyst Workspace
+# NexBI Phase 11 — Advertising Autonomous Analyst Workspace
 
 Combine the previous ten phases into the Advertising Autonomous Analyst.
 User input: "Why did Meta ad ROI decline yesterday?"

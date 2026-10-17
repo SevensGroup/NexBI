@@ -1,4 +1,4 @@
-# Musk Web Phase 2 — Autonomous Decision UI
+# NexBI Phase 2 — Autonomous Decision UI
 
 Visualize autonomous decisions. Define DecisionType: CALL_TOOL, DELEGATE_AGENT, REPLAN, REFLECT, ASK_USER, FINISH, ABORT.
 Decision fields: id, runId, step, type, objective, summary, reason, confidence, risk, nextAction, timestamp.

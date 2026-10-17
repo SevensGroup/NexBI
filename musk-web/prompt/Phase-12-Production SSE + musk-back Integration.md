@@ -1,4 +1,4 @@
-# Musk Web Phase 12 — Production SSE + musk-back Integration
+# NexBI Phase 12 — Production SSE + musk-back Integration
 
 Connect the real musk-back service.
 REST: POST /api/v1/agent/run. Request {goal, agentId?, context?}. Response {runId}.

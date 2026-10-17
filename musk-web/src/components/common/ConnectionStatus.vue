@@ -12,7 +12,7 @@ const color = computed(() => {
 </script>
 
 <template>
-  <div data-testid="backend-connection" class="flex items-center gap-2 text-xs text-mute" title="musk-back GET /health (REST). Not SSE.">
+  <div data-testid="backend-connection" class="flex items-center gap-2 text-xs text-mute" title="NexBI GET /health (REST). Not SSE.">
     <span class="status-dot" :class="color" />
     <span>{{ label }}</span>
   </div>

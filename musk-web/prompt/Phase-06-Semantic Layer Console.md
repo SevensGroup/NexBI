@@ -1,4 +1,4 @@
-# Musk Web Phase 6 — Semantic Layer Console
+# NexBI Phase 6 — Semantic Layer Console
 
 Implement the /semantic Semantic Layer Console.
 Tabs: Metrics, Dimensions, Entities, Data Sources, Query Builder.

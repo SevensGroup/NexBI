@@ -1,4 +1,4 @@
-# Musk Web Phase 4 — Tool Execution Console
+# NexBI Phase 4 — Tool Execution Console
 
 Implement the Tool Execution Console.
 ToolCall: id, runId, toolName, description, arguments, status, duration, result, error, risk.

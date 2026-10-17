@@ -1,4 +1,4 @@
-# Musk Web Phase 3 — Planner + Task DAG
+# NexBI Phase 3 — Planner + Task DAG
 
 Implement the Planner task DAG with Vue Flow.
 Task: id, title, description, dependencies, priority, status (PENDING/READY/RUNNING/COMPLETED/FAILED).

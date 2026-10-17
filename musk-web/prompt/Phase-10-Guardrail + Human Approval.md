@@ -1,4 +1,4 @@
-# Musk Web Phase 10 — Guardrail + Human Approval
+# NexBI Phase 10 — Guardrail + Human Approval
 
 Implement guardrails and human approval.
 Risk levels: LOW, MEDIUM, HIGH, CRITICAL.

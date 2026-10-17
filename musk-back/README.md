@@ -1,4 +1,4 @@
-# autonomous-agent
+# NexBI
 
 Production Agent Platform (Phase 12) for a Go AI Agent built on [CloudWeGo Eino](https://github.com/cloudwego/eino).
 

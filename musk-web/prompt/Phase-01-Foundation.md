@@ -1,4 +1,4 @@
-# Musk Web Phase 1 — Foundation
+# NexBI Phase 1 — Foundation
 
 Build the Vue 3 enterprise Agent Console foundation.
 Stack: Vue 3, TypeScript, Vite, Vue Router, Pinia, VueUse, Tailwind CSS, Element Plus, ECharts, Vue Flow, Axios.

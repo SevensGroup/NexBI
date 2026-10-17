@@ -1,6 +1,6 @@
-# Musk Web Global Cursor Rules
+# NexBI
 
-Project: Musk
+Project: NexBI
 Backend: musk-back
 Frontend: musk-web
 

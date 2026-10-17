@@ -1,4 +1,4 @@
-# Musk Web Phase 8 — Reflection UI
+# NexBI Phase 8 — Reflection UI
 
 Implement the Reflection UI.
 Reflection: id, goalSatisfied, evidenceSufficient, resultCorrect, missingInformation, errors, nextAction, confidence, timestamp.

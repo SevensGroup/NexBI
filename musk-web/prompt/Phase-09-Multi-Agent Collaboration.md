@@ -1,4 +1,4 @@
-# Musk Web Phase 9 — Multi-Agent Collaboration
+# NexBI Phase 9 — Multi-Agent Collaboration
 
 Implement multi-agent collaboration.
 Agents: Coordinator, Analyst, Researcher, Reviewer.

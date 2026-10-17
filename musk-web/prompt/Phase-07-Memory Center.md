@@ -1,4 +1,4 @@
-# Musk Web Phase 7 — Memory Center
+# NexBI Phase 7 — Memory Center
 
 Implement the /memory Memory Center.
 Types: SHORT_TERM, TASK_MEMORY, LONG_TERM.

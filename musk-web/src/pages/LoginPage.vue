@@ -43,7 +43,7 @@ async function submit(): Promise<void> {
   <div class="flex min-h-full items-center justify-center bg-canvas px-6 py-12">
     <div class="grid w-full max-w-4xl overflow-hidden rounded-3xl border border-line bg-panel md:grid-cols-[1.1fr_0.9fr]">
       <section class="hidden flex-col justify-between border-r border-line px-10 py-12 md:flex">
-        <p class="text-sm font-semibold tracking-tight">MUSK</p>
+        <p class="text-sm font-semibold tracking-tight">NexBI</p>
         <div>
           <h1 class="text-3xl font-semibold leading-snug">Build a board in one sentence</h1>
           <p class="mt-4 max-w-sm text-sm leading-6 text-mute">
@@ -54,7 +54,7 @@ async function submit(): Promise<void> {
       </section>
 
       <form class="flex flex-col px-8 py-10" @submit.prevent="submit">
-        <p class="text-sm font-semibold md:hidden">MUSK</p>
+        <p class="text-sm font-semibold md:hidden">NexBI</p>
         <h2 class="mt-6 text-xl font-semibold md:mt-2">Sign in</h2>
         <p class="mt-2 text-sm text-mute">Use the demo account to enter the console</p>
 

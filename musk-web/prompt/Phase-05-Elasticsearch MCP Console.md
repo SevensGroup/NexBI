@@ -1,4 +1,4 @@
-# Musk Web Phase 5 — Elasticsearch MCP Console
+# NexBI Phase 5 — Elasticsearch MCP Console
 
 Implement the Elasticsearch MCP Console and /tools.
 MCP server: Elasticsearch MCP. Tools: search, aggregate, count, get.

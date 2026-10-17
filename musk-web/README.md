@@ -1,6 +1,6 @@
-# Musk Web — Autonomous Agent Console
+# NexBI
 
-Vue 3 operating console for the Musk advertising autonomous analyst. This is not a chat UI. The agent lifecycle is:
+Vue 3 operating console for the NexBI advertising autonomous analyst. This is not a chat UI. The agent lifecycle is:
 
 `Goal Understanding → Planning → Decision → Tool → Observation → Reflection → Re-Decision → Multi-Agent → Evidence → Final Report`
 

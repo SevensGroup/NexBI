@@ -42,7 +42,7 @@ function isActive(key: string): boolean {
   <div class="flex h-full min-h-0 flex-col bg-canvas text-ink">
     <header class="flex h-12 shrink-0 items-center gap-3 border-b border-line px-3 sm:px-4">
       <button class="shrink-0 font-semibold tracking-tight" type="button" @click="router.push('/dashboard')">
-        MUSK
+        NexBI
         <span class="ml-2 hidden text-xs font-normal text-mute sm:inline">Agent Console</span>
       </button>
       <nav class="min-w-0 flex-1 overflow-x-auto text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

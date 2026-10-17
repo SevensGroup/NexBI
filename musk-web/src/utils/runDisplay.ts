@@ -1,7 +1,7 @@
 import { isSampleRunId } from '@/utils/timeline'
 
 export const SAMPLE_CATALOG_HINT =
-  'Sample catalog id. Start a live run from Dashboard — musk-back will open /runs/<uuid>.'
+  'Sample catalog id. Start a live run from Dashboard — NexBI will open /runs/<uuid>.'
 
 export function isLiveSampleCatalog(runId: string, mockMode: boolean): boolean {
   return !mockMode && isSampleRunId(runId)
